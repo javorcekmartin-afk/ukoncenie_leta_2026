@@ -7,16 +7,16 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Stánok – kalkulačka a inventúra v8</title>
+  <title>Stánok – kalkulačka a inventúra v9</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>Stánok – kalkulačka a inventúra <span style="font-size:12px;background:#eaf2ff;color:#174ea6;padding:4px 7px;border-radius:999px;vertical-align:middle">v8</span></h1>
-      <div class="subtitle">Produkt zadávaš iba raz. Inventúra a nákupný plán sa z neho vytvoria automaticky.</div>
+      <h1>Stánok – kalkulačka a inventúra <span style="font-size:12px;background:#eaf2ff;color:#174ea6;padding:4px 7px;border-radius:999px;vertical-align:middle">v9</span></h1>
+      <div class="subtitle">Náklad porcie a náklad celého otvoreného balenia sú dve odlišné veci. V9 ich počíta oddelene.</div>
     </div>
     <div class="actions">
       <button id="exportJson">Export JSON</button>
@@ -36,14 +36,14 @@
   </div>
 
   <section class="cards">
-    <div class="card plan"><div class="label">Plán tržby</div><div class="value" id="planRevenue">0 €</div><div class="meta">predajná cena × plán ks</div></div>
-    <div class="card"><div class="label">Plánovaný nákup</div><div class="value" id="planPurchase">0 €</div><div class="meta">hotovosť na celé balenia pred akciou</div></div>
-    <div class="card plan"><div class="label">Odhad zisku pri pláne</div><div class="value" id="planResult">0 €</div><div class="meta">tržba − náklad spotrebovaných porcií − plán doplnkových nákladov</div></div>
-    <div class="card break"><div class="label">Break-even tržba</div><div class="value" id="breakEven">0 €</div><div class="meta">tržba potrebná na pokrytie doplnkových nákladov</div></div>
-    <div class="card actual"><div class="label">Skutočná tržba</div><div class="value" id="actualRevenue">0 €</div><div class="meta">pokladňa alebo skutočné kusy</div></div>
-    <div class="card actual"><div class="label">Nákup po vratkách</div><div class="value" id="actualPurchase">0 €</div><div class="meta">reálny cash náklad na tovar a materiál</div></div>
+    <div class="card plan"><div class="label">Plán tržby</div><div class="value" id="planRevenue">0 €</div><div class="meta">predajná cena × plánovaný predaj</div></div>
+    <div class="card"><div class="label">Plánovaný nákup</div><div class="value" id="planPurchase">0 €</div><div class="meta">celé sudy, fľaše, balenia a materiál</div></div>
+    <div class="card plan"><div class="label">Odhad výsledku pri pláne</div><div class="value" id="planResult">0 €</div><div class="meta">tržba − celé plánované balenia − ďalšie náklady</div></div>
+    <div class="card break"><div class="label">Orientačný break-even</div><div class="value" id="breakEven">0 €</div><div class="meta">podľa priemerného jednotkového zisku</div></div>
+    <div class="card actual"><div class="label">Skutočná tržba</div><div class="value" id="actualRevenue">0 €</div><div class="meta">pokladňa alebo množstvo z inventúry</div></div>
+    <div class="card actual"><div class="label">Nákup po vratkách</div><div class="value" id="actualPurchase">0 €</div><div class="meta">všetky zaplatené nevrátené balenia</div></div>
     <div class="card actual"><div class="label">Doplnkové náklady</div><div class="value" id="actualSupplemental">0 €</div><div class="meta">prenájom, ľad, technika, doprava…</div></div>
-    <div class="card actual"><div class="label">Skutočný výsledok</div><div class="value" id="actualResult">0 €</div><div class="meta">tržba − všetky reálne náklady</div></div>
+    <div class="card actual"><div class="label">Skutočný výsledok</div><div class="value" id="actualResult">0 €</div><div class="meta">tržba − reálne zaplatené náklady</div></div>
   </section>
 
   <div class="tabs">
@@ -57,26 +57,26 @@
     <div class="panel">
       <div class="sectionhead">
         <div>
-          <h2>Produkty</h2>
-          <p>Bežný produkt (pivo, víno, nealko) má nákupné údaje priamo tu. Miešaný drink používa receptúru zo zdieľaných surovín v záložke 2.</p>
+          <h2>Produkty a plán</h2>
+          <p>Pri pive zadáš 0,5 L porciu, 50 L sud a cenu sudu. Aplikácia vypočíta 100 porcií zo sudu, náklad porcie a počet sudov potrebný na plán.</p>
         </div>
         <button class="primary" id="addProduct">＋ Pridať produkt</button>
       </div>
       <div class="toolbar"><input class="grow" id="productSearch" placeholder="Hľadať produkt…"><span class="status" id="saveStatus">Uložené lokálne</span></div>
       <div class="tablewrap">
-        <table>
+        <table style="min-width:2050px">
           <thead><tr>
             <th>Produkt</th><th>Kategória</th><th>Typ</th>
-            <th>Predávané množstvo</th><th>Nákupné balenie</th><th>Nákupná cena balenia</th>
-            <th>Predajná cena</th><th>Plán ks</th><th>Skutočne ks</th>
-            <th>Recept / doplnky</th><th>Náklad základu</th><th>Náklad doplnkov</th><th>Iný náklad / ks</th>
-            <th>Celkový náklad / ks</th><th>Zisk / ks</th><th>Prirážka</th><th>Odporúčaná cena</th><th>Akcie</th>
+            <th>Predávané množstvo</th><th>Nákupné balenie</th><th>Porcií z balenia</th><th>Cena balenia</th>
+            <th>Náklad / ks</th><th>Predajná cena</th><th>Zisk / ks</th><th>Prirážka</th>
+            <th>Plán predaja ks</th><th>Plán balení</th><th>Kapacita plánu</th>
+            <th>Skutočne minuté / predané ks</th><th>Recept / doplnky</th><th>Odporúčaná cena</th><th>Akcie</th>
           </tr></thead>
           <tbody id="productBody"></tbody>
         </table>
         <div class="empty" id="productEmpty" hidden>Žiadne produkty.</div>
       </div>
-      <div class="hint"><strong>Príklad piva:</strong> predávané množstvo 0,5 L, nákupné balenie 50 L, nákupná cena sudu 66 €. Aplikácia sama vypočíta 100 porcií zo sudu a 0,66 € náklad piva na porciu. Pohár pridáš cez „Doplnky“ ako 1 ks.</div>
+      <div class="hint"><strong>Urpiner – príklad:</strong> 0,5 L porcia, 50 L sud, 79 € za sud → 100 porcií zo sudu, základný náklad 0,79 € / pivo. Pohár 0,05 € pridá celkový náklad na 0,84 €. Pri pláne 500 pív aplikácia navrhne 5 sudov = 395 €.</div>
     </div>
   </section>
 
@@ -85,20 +85,20 @@
       <div class="sectionhead">
         <div>
           <h2>Zdieľané suroviny a spotrebný materiál</h2>
-          <p>Sem dávaj iba položky používané v receptúrach alebo ako doplnok k produktom – napr. gin, tonic, Aperol, pohár, slamka, servítka. Pivo zo sudu sem už zadávať nemusíš.</p>
+          <p>Sem patria položky používané vo viacerých produktoch alebo ako doplnok: gin, tonic, Aperol, poháre, slamky, servítky. Samotný sud piva tu zadávať nemusíš.</p>
         </div>
         <button class="primary" id="addItem">＋ Pridať položku</button>
       </div>
       <div class="tablewrap">
-        <table style="min-width:1100px">
+        <table style="min-width:1200px">
           <thead><tr>
-            <th>Položka</th><th>Typ</th><th>Jednotka</th><th>Obsah nákupného balenia</th><th>Cena balenia</th><th>Cena / jednotku</th><th>Predvolený obchod</th><th>Poznámka</th><th>Akcie</th>
+            <th>Položka</th><th>Typ</th><th>Jednotka</th><th>Obsah balenia</th><th>Cena balenia</th><th>Cena / jednotku</th><th>Plán spotreby</th><th>Plán balení</th><th>Obchod</th><th>Poznámka</th><th>Akcie</th>
           </tr></thead>
           <tbody id="itemBody"></tbody>
         </table>
         <div class="empty" id="itemEmpty" hidden>Žiadne zdieľané suroviny ani materiál.</div>
       </div>
-      <div class="hint"><strong>Poháre:</strong> balenie 100 ks za 5 € → cena 1 pohára 0,05 €. Ak ho pridáš k pivu ako 1 ks, náklad jedného piva sa zvýši o 0,05 €.</div>
+      <div class="hint"><strong>Poháre:</strong> 100 ks za 5 € = 0,05 € / ks. Ak po akcii zostane 10 pohárov v otvorenom balení, balenie stále stálo 5 €. V jednotkovom náklade drinku však zostáva pohár 0,05 €.</div>
     </div>
   </section>
 
@@ -107,23 +107,24 @@
       <div class="sectionhead">
         <div>
           <h2>Nákup a finálna inventúra</h2>
-          <p>Riadky sa vytvárajú automaticky z produktov a receptúr. Nič tu nemusíš pridávať druhýkrát.</p>
+          <p>Riadky vznikajú automaticky. Zadávaš iba skutočne kúpené balenia, reálnu cenu, vrátené neotvorené balenia a zvyšok v otvorených baleniach.</p>
         </div>
-        <button id="prefillActual">Predvyplniť reálny nákup z plánu</button>
+        <button id="prefillActual">Predvyplniť nákup z plánu</button>
       </div>
       <div class="tablewrap">
-        <table style="min-width:1800px">
+        <table style="min-width:2050px">
           <thead><tr>
-            <th>Položka</th><th>Typ</th><th>Jednotka</th><th>Plán spotreby</th><th>Balenie</th><th>Porcií z balenia</th>
-            <th>Plán balení</th><th>Plán nákup €</th>
-            <th>Skutočne kúpené balenia</th><th>Nákup brutto €</th><th>Vrátené celé balenia</th><th>Vratka €</th>
-            <th>Zvyšok otvoreného balenia</th><th>Reálne minuté</th><th>Náklad po vratke</th><th>Obchod / poznámka</th>
+            <th>Položka</th><th>Typ</th><th>Jednotka</th>
+            <th>Plán spotreby</th><th>Balenie</th><th>Porcií z balenia</th><th>Plán balení</th><th>Plán nákup €</th>
+            <th>Kúpené balenia</th><th>Reálna cena / balenie</th><th>Nákup brutto €</th>
+            <th>Vrátené neotvorené</th><th>Zaplatené balenia</th><th>Vratka €</th>
+            <th>Zvyšok v otvorených baleniach</th><th>Reálne minuté množstvo</th><th>Minuté porcie</th><th>Reálny náklad</th><th>Obchod / poznámka</th>
           </tr></thead>
           <tbody id="inventoryBody"></tbody>
         </table>
-        <div class="empty" id="inventoryEmpty" hidden>Po pridaní produktu alebo receptúry sa nákupné položky zobrazia automaticky.</div>
+        <div class="empty" id="inventoryEmpty" hidden>Po pridaní produktu alebo receptúry sa riadky zobrazia automaticky.</div>
       </div>
-      <div class="hint">Pri pive sa napr. 50 L sud zobrazí ako balenie 50 L a zároveň aplikácia ukáže <strong>100 porcií z balenia</strong> pri predaji 0,5 L. To sú dve rôzne informácie a už sa navzájom neprepisujú.</div>
+      <div class="hint"><strong>Príklad 1 sud:</strong> kúpené 1, vrátené 0, cena 79 €, zostatok 5 L → minuté 45 L = 90 porcií, ale <strong>reálny náklad zostáva 79 €</strong>. Zvyšných 5 L z otvoreného sudu sa neodpočítava z nákladov.</div>
     </div>
   </section>
 
@@ -131,7 +132,7 @@
     <div class="grid2">
       <div class="panel box">
         <div class="sectionhead" style="padding:0 0 12px">
-          <div><h2>Doplnkové náklady</h2><p>Náklady celej akcie, ktoré nie sú súčasťou konkrétneho drinku.</p></div>
+          <div><h2>Doplnkové náklady</h2><p>Prenájom, výčap, doprava, personál a ostatné náklady celej akcie.</p></div>
           <button id="addCost">＋ Pridať náklad</button>
         </div>
         <div id="costRows"></div>
@@ -140,22 +141,21 @@
         <h2 style="font-size:18px;margin-bottom:4px">Výsledok akcie</h2>
         <div class="resultlist">
           <div class="resultitem"><span>Plánovaná tržba</span><strong id="rPlanRevenue">0 €</strong></div>
-          <div class="resultitem"><span>Náklad plánovaných porcií</span><strong id="rPlanUnitCost">0 €</strong></div>
+          <div class="resultitem"><span>Plánovaný nákup celých balení</span><strong id="rPlanPurchase">0 €</strong></div>
+          <div class="resultitem"><span>Iné jednotkové náklady – plán</span><strong id="rOtherPlan">0 €</strong></div>
           <div class="resultitem"><span>Doplnkové náklady – plán</span><strong id="rSuppPlan">0 €</strong></div>
-          <div class="resultitem"><span><strong>Odhad zisku pri pláne</strong></span><strong id="rPlanResult">0 €</strong></div>
-          <div class="resultitem"><span>Break-even tržba</span><strong id="rBreakEven">0 €</strong></div>
+          <div class="resultitem"><span><strong>Odhad výsledku pri pláne</strong></span><strong id="rPlanResult">0 €</strong></div>
           <div class="resultitem"><span>Skutočná tržba</span><strong id="rActualRevenue">0 €</strong></div>
           <div class="resultitem"><span>Nákup po vratkách</span><strong id="rActualPurchase">0 €</strong></div>
-          <div class="resultitem"><span>Iné jednotkové náklady</span><strong id="rOtherActual">0 €</strong></div>
+          <div class="resultitem"><span>Iné jednotkové náklady – skutočnosť</span><strong id="rOtherActual">0 €</strong></div>
           <div class="resultitem"><span>Doplnkové náklady – skutočnosť</span><strong id="rSuppActual">0 €</strong></div>
           <div class="resultitem"><span><strong>Skutočný výsledok</strong></span><strong id="rActualResult">0 €</strong></div>
         </div>
-        <div class="hint" style="margin:12px 0 0"><strong>Odhad zisku pri pláne</strong> nie je hotovosť po nákupe. Je to plánovaná tržba mínus náklad porcií, ktoré plánuješ predať, mínus plánované doplnkové náklady. Samostatne preto hore vidíš aj „Plánovaný nákup“ – koľko hotovosti potrebuješ na celé balenia.</div>
+        <div class="hint" style="margin:12px 0 0"><strong>Odhad výsledku pri pláne</strong> už počíta celé plánované sudy, fľaše a balenia – nie iba teoreticky spotrebované litre. Preto napr. pri 490 pivách z 50 L sudov počíta 5 celých sudov.</div>
       </div>
     </div>
   </section>
-
-  <div class="footer">Dáta sa ukladajú v tomto prehliadači. Pred väčšou zmenou si môžeš spraviť Export JSON.</div>
+  <div class="footer">Dáta sa ukladajú v tomto prehliadači. V9 vie prevziať údaje z v8.</div>
 </div>
 
 <dialog id="recipeDialog">
@@ -166,7 +166,6 @@
     <div class="dialogactions"><button class="primary" id="doneRecipe">Hotovo</button></div>
   </div>
 </dialog>
-
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
