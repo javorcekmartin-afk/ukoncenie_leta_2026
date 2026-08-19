@@ -1,0 +1,9 @@
+{
+  "name": "Stánok – plán, materiál a inventúra",
+  "short_name": "Stánok",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1f6feb",
+  "icons": []
+}

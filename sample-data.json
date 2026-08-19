@@ -1,0 +1,11 @@
+{
+  "version": 5,
+  "meta": {
+    "eventName": "Ukončenie leta",
+    "eventDate": "",
+    "eventPlace": "Kostolište",
+    "targetMarkup": 200,
+    "cashRevenue": ""
+  },
+  "note": "V5 eviduje poháre, slamky a servítky ako spotrebný materiál použiteľný priamo v receptúrach."
+}
