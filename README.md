@@ -1,69 +1,48 @@
-# Stánok – plán, materiál a inventúra (v5)
+# Stánok – kalkulačka, nákup a inventúra (v6)
 
-## Hlavná zmena v5: spotrebný materiál je súčasť receptúr
+## Čo opravuje v6
 
-Poháre, slamky, servítky a podobný materiál, ktorý sa spotrebúva spolu s predaným produktom,
-eviduj v sekcii **Suroviny & spotrebný materiál**.
+### 1. Nákupné údaje sú opäť priamo pri produkte
+Pri bežnom produkte zadávaš rovno:
+- názov,
+- kategóriu,
+- predávané množstvo (napr. 0,5 L),
+- veľkosť nákupného balenia (napr. sud 50 L),
+- nákupnú cenu balenia (napr. 66 €),
+- predajnú cenu,
+- plánované a skutočné kusy.
 
-Príklad:
-- Pohár 0,5 l
-- jednotka: `ks`
-- obsah balenia: `100`
-- cena balenia: `5 €`
-- cena 1 ks sa automaticky vypočíta na `0,05 €`
-
-Do receptúry piva pridaj:
-- 0,5 L piva
-- 1 ks pohára
-
-Aplikácia potom:
-1. započíta 0,05 € do nákladu jedného piva,
-2. z plánu predaja vypočíta počet potrebných pohárov a celých balení,
-3. vo finálnej inventúre vie pracovať so zvyškom v otvorenom balení,
-4. do skutočného cash výsledku započíta celé zaplatené balenie, pokiaľ ho nemožno vrátiť.
+Aplikácia automaticky počíta náklad predávanej porcie.
 
 Príklad:
-- kúpené: 100 pohárov za 5 €
-- použité: 67
-- zostatok otvoreného balenia: 33
-- náklad na jeden použitý pohár v kalkulácii produktu: 0,05 €
-- skutočný cash náklad akcie: 5 €
+- sud piva: 50 L
+- cena sudu: 66 €
+- predávaná porcia: 0,5 L
+- cena nápoja na porciu: 0,66 €
 
-## Doplnkové náklady
-Sem patria náklady, ktoré nechceš viazať ku konkrétnemu predanému drinku:
-- prenájom miesta,
-- prenájom výčapu / techniky,
-- doprava,
-- personál,
-- elektrina,
-- paušálne poplatky,
-- iné prevádzkové náklady.
+### 2. Poháre a spotrebný materiál ostávajú v receptúre
+Pohár 100 ks / 5 € = 0,05 € za kus.
+Do receptúry piva pridáš 1 ks pohára a náklad piva bude obsahovať aj pohár.
 
-Ak chceš vedieť náklad položky na jeden drink, eviduj ju radšej ako spotrebný materiál v receptúre.
+### 3. Miešané drinky
+Pri produkte zvoľ typ `Receptúra`.
+Nákupné polia priamo v riadku sa skryjú a cenu vypočíta recept z viacerých surovín.
 
-## „Iný náklad / ks“
-Pri produktoch ostáva voliteľný stĺpec pre jednoduchý jednotkový náklad, ktorý nechceš viesť cez sklad/balenia.
-Nepoužívaj ho pre poháre či servítky, ak ich eviduješ ako spotrebný materiál.
+### 4. Opravené editovanie
+Aplikácia už neprekresľuje tabuľku po každom stlačení klávesy.
+Názov produktu môžeš napísať plynulo bez opakovaného klikania.
 
-## Finálna inventúra
-Pri každej surovine alebo spotrebnom materiáli zadáš:
-- kúpené balenia,
-- prípadné vrátené celé nerozbalené balenia,
-- zvyšok v otvorenom balení.
+### 5. Desatinná čiarka
+Ceny a množstvá prijímajú:
+- `2,05`
+- aj `2.05`
 
-Aplikácia vypočíta:
-- netto nakúpené množstvo,
-- reálne minuté množstvo,
-- reálny náklad po vratkách,
-- kontrolu oproti receptúram a skutočne predaným kusom.
+Po opustení poľa sa hodnota uloží a prepočíta.
 
-## Aktualizácia na GitHub Pages
-Nahraj / nahraď v koreňovom priečinku repozitára:
+## GitHub Pages – aktualizácia
+Ak už máš aplikáciu na GitHube, nahraď:
 - `index.html`
 - `manifest.webmanifest`
 - `service-worker.js`
 
-`README.md` a `sample-data.json` sú voliteľné.
-
-Aplikácia ukladá dáta do localStorage konkrétneho prehliadača.
-Pred väčšou aktualizáciou odporúčame spraviť Export JSON.
+Potom commitni zmeny. Dáta uložené v prehliadači sa zachovajú; pred aktualizáciou je aj tak dobré spraviť Export JSON.

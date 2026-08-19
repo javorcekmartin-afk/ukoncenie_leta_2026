@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "meta": {
     "eventName": "Ukončenie leta",
     "eventDate": "",
@@ -7,5 +7,5 @@
     "targetMarkup": 200,
     "cashRevenue": ""
   },
-  "note": "V5 eviduje poháre, slamky a servítky ako spotrebný materiál použiteľný priamo v receptúrach."
+  "note": "V6 vracia nákupné údaje priamo k produktu a opravuje editovanie/desatinnú čiarku."
 }
