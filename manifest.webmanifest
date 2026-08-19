@@ -1,7 +1,7 @@
 {
-  "name": "Stánok – kalkulačka a inventúra",
+  "name": "Stánok – kalkulačka a inventúra v8",
   "short_name": "Stánok",
-  "start_url": "./",
+  "start_url": "./?v=8",
   "display": "standalone",
   "background_color": "#f4f7fb",
   "theme_color": "#1f6feb",
