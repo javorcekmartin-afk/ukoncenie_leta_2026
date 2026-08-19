@@ -4,102 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#1f6feb">
-  <title>Stánok – kalkulačka, nákup a inventúra</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Stánok – kalkulačka a inventúra v8</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <style>
-    :root{
-      --bg:#f4f7fb;--panel:#fff;--text:#172033;--muted:#6b7280;--line:#e4e9f1;
-      --accent:#1f6feb;--accent-soft:#eaf2ff;--good:#137a4c;--danger:#c73b3b;--warn:#996515;
-      --shadow:0 10px 30px rgba(20,33,61,.07);--r:16px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    .wrap{max-width:1680px;margin:auto;padding:20px}
-    h1,h2,h3{margin:0}
-    h1{font-size:27px}
-    .subtitle{color:var(--muted);font-size:13px;margin-top:5px}
-    .top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
-    .actions,.tabs,.row-actions,.inline,.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    button,.filelabel{
-      border:1px solid var(--line);background:#fff;color:var(--text);padding:9px 12px;border-radius:10px;
-      font-weight:750;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;
-    }
-    button:hover,.filelabel:hover{box-shadow:0 4px 12px rgba(0,0,0,.06)}
-    button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-    button.danger{color:var(--danger)}
-    button.small{padding:5px 8px;font-size:11px}
-    input[type=file]{display:none}
-    .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
-    .event{padding:13px;margin-bottom:12px}
-    .eventgrid{display:grid;grid-template-columns:1.5fr 160px 1fr 170px 190px;gap:10px;align-items:end}
-    .field{display:flex;flex-direction:column;gap:5px;min-width:0}
-    .field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:800}
-    input,select{border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);padding:8px 9px;font:inherit;min-width:0}
-    input:focus,select:focus{outline:none;border-color:#adc8f8;box-shadow:0 0 0 3px #edf4ff}
-    .cards{display:grid;grid-template-columns:repeat(8,minmax(140px,1fr));gap:9px;margin-bottom:12px}
-    .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;box-shadow:var(--shadow)}
-    .card .label{font-size:10px;text-transform:uppercase;letter-spacing:.045em;color:var(--muted);font-weight:800}
-    .card .value{font-size:20px;font-weight:900;margin-top:7px;white-space:nowrap}
-    .card .meta{font-size:10px;color:var(--muted);margin-top:4px}
-    .card.plan{border-top:4px solid var(--accent)} .card.actual{border-top:4px solid var(--good)}
-    .card.break{border-top:4px solid var(--warn)}
-    .tabs{margin-bottom:10px}
-    .tabs button.active{background:var(--accent-soft);border-color:#bfd5fb;color:#174ea6}
-    .tab{display:none}.tab.active{display:block}
-    .toolbar{padding:10px 12px;margin-bottom:10px}
-    .toolbar .grow{flex:1;min-width:220px}
-    .status{margin-left:auto;color:var(--muted);font-size:11px}
-    .sectionhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;padding:15px 15px 0}
-    .sectionhead h2{font-size:18px}
-    .sectionhead p{margin:4px 0 0;color:var(--muted);font-size:12px;max-width:820px}
-    .tablewrap{overflow:auto;max-height:62vh;margin-top:10px;border-top:1px solid var(--line)}
-    table{width:100%;border-collapse:separate;border-spacing:0;min-width:1260px}
-    th,td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-    th{position:sticky;top:0;z-index:3;background:#f8fbff;color:#505a6c;text-align:left;white-space:nowrap;font-size:10px;text-transform:uppercase;letter-spacing:.035em}
-    td{font-size:12px;background:#fff}
-    tr:hover td{background:#fbfdff}
-    td input,td select{width:100%;border-color:transparent;background:transparent;padding:6px 7px}
-    td input:focus,td select:focus{background:#fff;border-color:#b8cff8}
-    .name{min-width:180px;font-weight:700}.note{min-width:145px}
-    .calc{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
-    .good{color:var(--good)}.bad{color:var(--danger)}.warn{color:var(--warn)}
-    .pill{display:inline-flex;padding:3px 7px;border-radius:999px;background:var(--accent-soft);color:#245ba8;font-size:11px;font-weight:800}
-    .muted{color:var(--muted)}
-    .mini{font-size:10px;color:var(--muted)}
-    .empty{padding:38px;text-align:center;color:var(--muted)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .box{padding:15px}
-    .box h3{font-size:16px;margin-bottom:4px}.box p{font-size:12px;color:var(--muted);margin:0 0 12px}
-    .costrow{display:grid;grid-template-columns:1fr 150px 44px;gap:7px;margin-bottom:7px}
-    .totalrow{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:10px;padding-top:10px;font-weight:900}
-    .resultlist{display:grid;gap:9px}
-    .resultitem{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
-    .resultitem:last-child{border-bottom:0}.resultitem strong{font-variant-numeric:tabular-nums}
-    .hint{margin:10px 15px 15px;padding:11px 12px;background:#f8fbff;border:1px solid #dce8fb;border-radius:11px;color:#506176;font-size:12px}
-    dialog{border:0;padding:0;border-radius:18px;box-shadow:0 25px 80px rgba(0,0,0,.25);width:min(760px,calc(100% - 24px));max-height:88vh}
-    dialog::backdrop{background:rgba(15,23,42,.45)}
-    .dialog{padding:18px}.dialoghead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}
-    .dialogbody{max-height:62vh;overflow:auto}
-    .recipe-row{display:grid;grid-template-columns:1fr 150px 44px;gap:7px;margin-bottom:7px}
-    .dialogactions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
-    .recipe-summary{font-size:12px;color:var(--muted);margin-top:8px}
-    .footer{font-size:11px;color:var(--muted);padding:11px 2px}
-    .tag{display:inline-flex;padding:2px 6px;border-radius:999px;background:#f0f2f6;color:#586174;font-size:10px;font-weight:750}
-    @media(max-width:1300px){.cards{grid-template-columns:repeat(4,1fr)}.eventgrid{grid-template-columns:1fr 1fr 1fr}}
-    @media(max-width:850px){.grid2{grid-template-columns:1fr}.eventgrid{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr 1fr}}
-    @media(max-width:600px){
-      .wrap{padding:11px}.actions{width:100%}.actions button,.actions .filelabel{flex:1}
-      .eventgrid{grid-template-columns:1fr}.card .value{font-size:17px}.tabs{overflow:auto;flex-wrap:nowrap;padding-bottom:2px}.tabs button{white-space:nowrap}
-      .status{width:100%;margin-left:0}.sectionhead{padding:12px 12px 0}
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>Stánok – kalkulačka, nákup a inventúra</h1>
-      <div class="subtitle">Pri produktoch zadáš rovno predávané množstvo, veľkosť nákupného balenia a jeho cenu. Receptúra rieši miešané drinky aj poháre.</div>
+      <h1>Stánok – kalkulačka a inventúra <span style="font-size:12px;background:#eaf2ff;color:#174ea6;padding:4px 7px;border-radius:999px;vertical-align:middle">v8</span></h1>
+      <div class="subtitle">Produkt zadávaš iba raz. Inventúra a nákupný plán sa z neho vytvoria automaticky.</div>
     </div>
     <div class="actions">
       <button id="exportJson">Export JSON</button>
@@ -110,802 +27,146 @@
 
   <div class="panel event">
     <div class="eventgrid">
-      <div class="field"><label>Názov akcie</label><input id="eventName" placeholder="Ukončenie leta"></div>
+      <div class="field"><label>Názov akcie</label><input id="eventName"></div>
       <div class="field"><label>Dátum</label><input id="eventDate" type="date"></div>
-      <div class="field"><label>Miesto</label><input id="eventPlace" placeholder="Kostolište"></div>
-      <div class="field"><label>Cieľová prirážka</label><div class="inline"><input id="targetMarkup" type="text" inputmode="decimal" autocomplete="off"><span>%</span></div></div>
-      <div class="field"><label>Skutočná tržba z pokladne</label><input id="cashRevenue" type="text" inputmode="decimal" autocomplete="off" placeholder="voliteľné"></div>
+      <div class="field"><label>Miesto</label><input id="eventPlace"></div>
+      <div class="field"><label>Cieľová prirážka</label><div class="inline"><input id="targetMarkup" inputmode="decimal"><span>%</span></div></div>
+      <div class="field"><label>Skutočná tržba z pokladne</label><input id="cashRevenue" inputmode="decimal" placeholder="voliteľné"></div>
     </div>
   </div>
 
   <section class="cards">
-    <div class="card plan"><div class="label">Plán tržby</div><div class="value" id="planRevenue">0 €</div><div class="meta">podľa plánovaných kusov</div></div>
-    <div class="card plan"><div class="label">Plán čistý výsledok</div><div class="value" id="planNet">0 €</div><div class="meta">spotreba − doplnkové náklady</div></div>
-    <div class="card"><div class="label">Cash na nákup</div><div class="value" id="planPurchase">0 €</div><div class="meta">suroviny podľa plánu, bez doplnkových</div></div>
-    <div class="card break"><div class="label">Bod zvratu – tržba</div><div class="value" id="breakEvenRevenue">0 €</div><div class="meta" id="breakEvenMeta">podľa mixu plánu</div></div>
-    <div class="card actual"><div class="label">Skutočná tržba</div><div class="value" id="actualRevenue">0 €</div><div class="meta">pokladňa alebo zadané kusy</div></div>
-    <div class="card actual"><div class="label">Nákup po vratkách</div><div class="value" id="actualPurchase">0 €</div><div class="meta">reálny cash náklad na tovar</div></div>
-    <div class="card actual"><div class="label">Skutočný výsledok</div><div class="value" id="actualNet">0 €</div><div class="meta">po vratkách a fixných nákladoch</div></div>
-    <div class="card"><div class="label">Vrátený tovar</div><div class="value" id="returnedValue">0 €</div><div class="meta">hodnota nerozbalených vratných balení</div></div>
+    <div class="card plan"><div class="label">Plán tržby</div><div class="value" id="planRevenue">0 €</div><div class="meta">predajná cena × plán ks</div></div>
+    <div class="card"><div class="label">Plánovaný nákup</div><div class="value" id="planPurchase">0 €</div><div class="meta">hotovosť na celé balenia pred akciou</div></div>
+    <div class="card plan"><div class="label">Odhad zisku pri pláne</div><div class="value" id="planResult">0 €</div><div class="meta">tržba − náklad spotrebovaných porcií − plán doplnkových nákladov</div></div>
+    <div class="card break"><div class="label">Break-even tržba</div><div class="value" id="breakEven">0 €</div><div class="meta">tržba potrebná na pokrytie doplnkových nákladov</div></div>
+    <div class="card actual"><div class="label">Skutočná tržba</div><div class="value" id="actualRevenue">0 €</div><div class="meta">pokladňa alebo skutočné kusy</div></div>
+    <div class="card actual"><div class="label">Nákup po vratkách</div><div class="value" id="actualPurchase">0 €</div><div class="meta">reálny cash náklad na tovar a materiál</div></div>
+    <div class="card actual"><div class="label">Doplnkové náklady</div><div class="value" id="actualSupplemental">0 €</div><div class="meta">prenájom, ľad, technika, doprava…</div></div>
+    <div class="card actual"><div class="label">Skutočný výsledok</div><div class="value" id="actualResult">0 €</div><div class="meta">tržba − všetky reálne náklady</div></div>
   </section>
 
   <div class="tabs">
-    <button class="active" data-tab="products">1. Produkty & receptúry</button>
-    <button data-tab="ingredients">2. Suroviny & spotrebný materiál</button>
-    <button data-tab="purchases">3. Nákup & inventúra</button>
+    <button class="active" data-tab="products">1. Produkty</button>
+    <button data-tab="items">2. Suroviny & materiál</button>
+    <button data-tab="inventory">3. Nákup & inventúra</button>
     <button data-tab="costs">4. Doplnkové náklady & výsledok</button>
   </div>
 
   <section class="tab active" id="tab-products">
     <div class="panel">
       <div class="sectionhead">
-        <div><h2>Predajné produkty</h2><p>Tu nastavíš ceny, plán predaja a receptúru. Skutočné kusy doplníš až po akcii – netreba nič klikať počas predaja.</p></div>
+        <div>
+          <h2>Produkty</h2>
+          <p>Bežný produkt (pivo, víno, nealko) má nákupné údaje priamo tu. Miešaný drink používa receptúru zo zdieľaných surovín v záložke 2.</p>
+        </div>
         <button class="primary" id="addProduct">＋ Pridať produkt</button>
       </div>
-      <div class="toolbar">
-        <input class="grow" id="productSearch" placeholder="Hľadať produkt…">
-        <span class="status" id="saveStatus">Uložené lokálne</span>
-      </div>
+      <div class="toolbar"><input class="grow" id="productSearch" placeholder="Hľadať produkt…"><span class="status" id="saveStatus">Uložené lokálne</span></div>
       <div class="tablewrap">
         <table>
           <thead><tr>
             <th>Produkt</th><th>Kategória</th><th>Typ</th>
             <th>Predávané množstvo</th><th>Nákupné balenie</th><th>Nákupná cena balenia</th>
             <th>Predajná cena</th><th>Plán ks</th><th>Skutočne ks</th>
-            <th>Recept / materiál</th><th>Náklad nápoja / receptu</th><th>Ostatný náklad / porciu</th><th>Celkový náklad / ks</th>
-            <th>Zisk / ks</th><th>Prirážka</th><th>Odporúčaná cena</th><th>Plán zisku</th><th>Skutočná tržba</th><th>Akcie</th>
+            <th>Recept / doplnky</th><th>Náklad základu</th><th>Náklad doplnkov</th><th>Iný náklad / ks</th>
+            <th>Celkový náklad / ks</th><th>Zisk / ks</th><th>Prirážka</th><th>Odporúčaná cena</th><th>Akcie</th>
           </tr></thead>
           <tbody id="productBody"></tbody>
         </table>
         <div class="empty" id="productEmpty" hidden>Žiadne produkty.</div>
       </div>
-      <div class="hint">
-        <strong>Bežný produkt funguje ako tvoj Excel:</strong> napr. Urpiner – predávané množstvo 0,5 L, nákupné balenie 50 L, nákupná cena balenia 66 €. Aplikácia z toho sama vypočíta cenu za liter a náklad 0,5 L porcie. Pohár pridaj cez „Receptúra“ ako 1 ks spotrebného materiálu.
-      </div>
+      <div class="hint"><strong>Príklad piva:</strong> predávané množstvo 0,5 L, nákupné balenie 50 L, nákupná cena sudu 66 €. Aplikácia sama vypočíta 100 porcií zo sudu a 0,66 € náklad piva na porciu. Pohár pridáš cez „Doplnky“ ako 1 ks.</div>
     </div>
   </section>
 
-  <section class="tab" id="tab-ingredients">
+  <section class="tab" id="tab-items">
     <div class="panel">
       <div class="sectionhead">
-        <div><h2>Suroviny a spotrebný materiál</h2><p>Sem patria nápoje aj materiál viazaný na predaj – napr. poháre, slamky či servítky. Jedna položka môže byť použitá vo viacerých receptoch a zmena nákupnej ceny automaticky prepočíta všetky produkty, kde sa používa.</p></div>
-        <button class="primary" id="addIngredient">＋ Pridať surovinu</button>
-      </div>
-      <div class="hint" style="margin-top:12px">
-        <strong>Príklad pohárov:</strong> balenie 100 ks za 5 € = 0,05 € za pohár. Ak je v receptúre piva 1 ks pohára,
-        náklad jedného piva obsahuje 0,05 €. Ak po akcii zostane 33 ks z otvoreného balenia, do inventúry zadáš 33 ks.
-        Finálny výsledok však stále počíta celé zaplatené balenie 5 €, pokiaľ ho nemožno vrátiť.
+        <div>
+          <h2>Zdieľané suroviny a spotrebný materiál</h2>
+          <p>Sem dávaj iba položky používané v receptúrach alebo ako doplnok k produktom – napr. gin, tonic, Aperol, pohár, slamka, servítka. Pivo zo sudu sem už zadávať nemusíš.</p>
+        </div>
+        <button class="primary" id="addItem">＋ Pridať položku</button>
       </div>
       <div class="tablewrap">
-        <table>
+        <table style="min-width:1100px">
           <thead><tr>
-            <th>Surovina</th><th>Kategória</th><th>Jednotka</th><th>Obsah 1 balenia</th><th>Cena 1 balenia</th><th>Cena / jednotku</th>
-            <th>Predvolený obchod</th><th>Plán potreba</th><th>Plán balení</th><th>Plán nákup</th><th>Poznámka</th><th>Akcie</th>
+            <th>Položka</th><th>Typ</th><th>Jednotka</th><th>Obsah nákupného balenia</th><th>Cena balenia</th><th>Cena / jednotku</th><th>Predvolený obchod</th><th>Poznámka</th><th>Akcie</th>
           </tr></thead>
-          <tbody id="ingredientBody"></tbody>
+          <tbody id="itemBody"></tbody>
         </table>
-        <div class="empty" id="ingredientEmpty" hidden>Žiadne suroviny.</div>
+        <div class="empty" id="itemEmpty" hidden>Žiadne zdieľané suroviny ani materiál.</div>
       </div>
+      <div class="hint"><strong>Poháre:</strong> balenie 100 ks za 5 € → cena 1 pohára 0,05 €. Ak ho pridáš k pivu ako 1 ks, náklad jedného piva sa zvýši o 0,05 €.</div>
     </div>
   </section>
 
-  <section class="tab" id="tab-purchases">
-    <div class="panel" style="margin-bottom:12px">
-      <div class="sectionhead">
-        <div><h2>Reálny nákup a vratky</h2><p>Každý nákup môže mať iný obchod a inú cenu. Nerozbalené celé balenia, ktoré vrátiš, sa automaticky odpočítajú z reálneho nákladu.</p></div>
-        <div class="actions"><button id="seedPurchases">Naplniť z plánu</button><button class="primary" id="addPurchase">＋ Pridať nákup</button></div>
-      </div>
-      <div class="tablewrap" style="max-height:38vh">
-        <table>
-          <thead><tr><th>Surovina</th><th>Obchod</th><th>Kúpené balenia</th><th>Reálna cena / balenie</th><th>Vrátené nerozbalené</th><th>Nákup brutto</th><th>Vratka</th><th>Nákup po vratke</th><th>Akcie</th></tr></thead>
-          <tbody id="purchaseBody"></tbody>
-        </table>
-        <div class="empty" id="purchaseEmpty" hidden>Žiadne reálne nákupy. Môžeš ich jedným klikom naplniť z plánovaného nákupného zoznamu.</div>
-      </div>
-    </div>
-
+  <section class="tab" id="tab-inventory">
     <div class="panel">
       <div class="sectionhead">
-        <div><h2>Koncová inventúra</h2><p>Po akcii zadáš iba zvyšok v otvorených / nevratných baleniach – napr. litre v otvorenej fľaši alebo počet pohárov, ktoré zostali v otvorenom balení. Vrátené celé nerozbalené balenia sú už vyššie a nevytvárajú zásobu.</p></div>
+        <div>
+          <h2>Nákup a finálna inventúra</h2>
+          <p>Riadky sa vytvárajú automaticky z produktov a receptúr. Nič tu nemusíš pridávať druhýkrát.</p>
+        </div>
+        <button id="prefillActual">Predvyplniť reálny nákup z plánu</button>
       </div>
       <div class="tablewrap">
-        <table>
+        <table style="min-width:1800px">
           <thead><tr>
-            <th>Surovina</th><th>Obchod(y)</th><th>Netto nakúpené</th><th>Vrátené</th><th>Zvyšok otvoreného</th><th>Reálne minuté</th>
-            <th>Nákup brutto</th><th>Hodnota vratky</th><th>Reálny náklad po vratke</th><th>Kontrola vs. receptúry</th>
+            <th>Položka</th><th>Typ</th><th>Jednotka</th><th>Plán spotreby</th><th>Balenie</th><th>Porcií z balenia</th>
+            <th>Plán balení</th><th>Plán nákup €</th>
+            <th>Skutočne kúpené balenia</th><th>Nákup brutto €</th><th>Vrátené celé balenia</th><th>Vratka €</th>
+            <th>Zvyšok otvoreného balenia</th><th>Reálne minuté</th><th>Náklad po vratke</th><th>Obchod / poznámka</th>
           </tr></thead>
           <tbody id="inventoryBody"></tbody>
         </table>
+        <div class="empty" id="inventoryEmpty" hidden>Po pridaní produktu alebo receptúry sa nákupné položky zobrazia automaticky.</div>
       </div>
-      <div class="hint">„Reálne minuté“ = netto nakúpené množstvo po vratkách − zvyšok otvoreného balenia. Pri pohároch tak môžeš kúpiť 100 ks, použiť 67 ks a zadať zostatok 33 ks. Náklad jedného drinku počíta cenu 1 pohára, ale finálny cash náklad počíta celé zaplatené balenie, ak ho už nemožno vrátiť.</div>
-    </div>
-
-    <div class="panel box" style="margin-top:12px">
-      <h2 style="font-size:18px;margin-bottom:4px">Nákladový súhrn po finálnej inventúre</h2>
-      <p>Sem sa automaticky prenesú všetky reálne náklady akcie vrátane doplnkových položiek, ktoré sa nepredávajú.</p>
-      <div class="resultlist">
-        <div class="resultitem"><span>Nákup surovín a materiálu po vratkách</span><strong id="invPurchaseCost">0 €</strong></div>
-        <div class="resultitem"><span>Doplnkové náklady</span><strong id="invSupplementalCost">0 €</strong></div>
-        <div class="resultitem"><span>Iné jednotkové náklady podľa predaných kusov</span><strong id="invExtrasCost">0 €</strong></div>
-        <div class="resultitem"><span>Reálne náklady spolu</span><strong id="invTotalCost">0 €</strong></div>
-      </div>
+      <div class="hint">Pri pive sa napr. 50 L sud zobrazí ako balenie 50 L a zároveň aplikácia ukáže <strong>100 porcií z balenia</strong> pri predaji 0,5 L. To sú dve rôzne informácie a už sa navzájom neprepisujú.</div>
     </div>
   </section>
 
   <section class="tab" id="tab-costs">
-    <div class="panel">
-      <div class="sectionhead">
-        <div>
-          <h2>Doplnkové náklady</h2>
-          <p>Veci, ktoré sa samostatne nepredávajú, ale bez nich stánok nevie fungovať – prenájom miesta, servítky, ľad, poháre, výčap, doprava, technika, personál a podobne.</p>
+    <div class="grid2">
+      <div class="panel box">
+        <div class="sectionhead" style="padding:0 0 12px">
+          <div><h2>Doplnkové náklady</h2><p>Náklady celej akcie, ktoré nie sú súčasťou konkrétneho drinku.</p></div>
+          <button id="addCost">＋ Pridať náklad</button>
         </div>
-        <button class="primary" id="addCost">＋ Pridať náklad</button>
+        <div id="costRows"></div>
       </div>
-      <div class="tablewrap" style="max-height:42vh">
-        <table style="min-width:1180px">
-          <thead><tr>
-            <th>Položka</th><th>Kategória</th><th>Plán €</th><th>Skutočné množstvo</th><th>Cena / ks €</th>
-            <th>Vratka / refund €</th><th>Skutočný náklad</th><th>Poznámka</th><th>Akcie</th>
-          </tr></thead>
-          <tbody id="costRows"></tbody>
-        </table>
-        <div class="empty" id="costEmpty" hidden>Žiadne doplnkové náklady.</div>
-      </div>
-      <div class="hint">
-        <strong>Pozor na dvojité započítanie:</strong> ak napríklad poháre eviduješ tu ako doplnkový nákup,
-        nedávaj ich zároveň do stĺpca „Obal / ks“ pri produktoch. „Plán €“ sa používa pre plánovaný výsledok a break-even.
-        „Skutočný náklad“ = množstvo × cena/ks − vratka/refund.
-      </div>
-      <div class="inline" style="justify-content:flex-end;padding:0 15px 15px;gap:24px">
-        <strong>Plán spolu: <span id="suppPlanTotal">0 €</span></strong>
-        <strong>Skutočnosť spolu: <span id="suppActualTotal">0 €</span></strong>
-      </div>
-    </div>
-
-    <div class="grid2" style="margin-top:12px">
       <div class="panel box">
         <h2 style="font-size:18px;margin-bottom:4px">Výsledok akcie</h2>
-        <p>Plán používa teoretickú spotrebu podľa receptúr a plán doplnkových nákladov. Skutočnosť používa reálny nákup po vratkách a skutočné doplnkové náklady.</p>
         <div class="resultlist">
           <div class="resultitem"><span>Plánovaná tržba</span><strong id="rPlanRevenue">0 €</strong></div>
-          <div class="resultitem"><span>Teoretické variabilné náklady</span><strong id="rPlanVariable">0 €</strong></div>
+          <div class="resultitem"><span>Náklad plánovaných porcií</span><strong id="rPlanUnitCost">0 €</strong></div>
           <div class="resultitem"><span>Doplnkové náklady – plán</span><strong id="rSuppPlan">0 €</strong></div>
-          <div class="resultitem"><span>Plánovaný čistý výsledok</span><strong id="rPlanNet">0 €</strong></div>
-          <div class="resultitem"><span>Bod zvratu – tržba</span><strong id="rBreakEven">0 €</strong></div>
+          <div class="resultitem"><span><strong>Odhad zisku pri pláne</strong></span><strong id="rPlanResult">0 €</strong></div>
+          <div class="resultitem"><span>Break-even tržba</span><strong id="rBreakEven">0 €</strong></div>
           <div class="resultitem"><span>Skutočná tržba</span><strong id="rActualRevenue">0 €</strong></div>
-          <div class="resultitem"><span>Reálny nákup surovín a materiálu po vratkách</span><strong id="rActualPurchase">0 €</strong></div>
-          <div class="resultitem"><span>Iné jednotkové náklady podľa skutočných kusov</span><strong id="rActualExtras">0 €</strong></div>
+          <div class="resultitem"><span>Nákup po vratkách</span><strong id="rActualPurchase">0 €</strong></div>
+          <div class="resultitem"><span>Iné jednotkové náklady</span><strong id="rOtherActual">0 €</strong></div>
           <div class="resultitem"><span>Doplnkové náklady – skutočnosť</span><strong id="rSuppActual">0 €</strong></div>
-          <div class="resultitem"><span>Skutočný čistý výsledok</span><strong id="rActualNet">0 €</strong></div>
+          <div class="resultitem"><span><strong>Skutočný výsledok</strong></span><strong id="rActualResult">0 €</strong></div>
         </div>
-      </div>
-
-      <div class="panel box">
-        <h2 style="font-size:18px;margin-bottom:4px">Ako čítať bod zvratu</h2>
-        <p id="breakEvenText">Najprv doplň ceny, plán predaja a doplnkové náklady.</p>
+        <div class="hint" style="margin:12px 0 0"><strong>Odhad zisku pri pláne</strong> nie je hotovosť po nákupe. Je to plánovaná tržba mínus náklad porcií, ktoré plánuješ predať, mínus plánované doplnkové náklady. Samostatne preto hore vidíš aj „Plánovaný nákup“ – koľko hotovosti potrebuješ na celé balenia.</div>
       </div>
     </div>
   </section>
 
-  <div class="footer">
-    Dáta sa ukladajú v tomto prehliadači. Export JSON používaj ako zálohu alebo na presun medzi zariadeniami. Aplikácia je pripravená na GitHub Pages a po prvom načítaní funguje aj offline.
-  </div>
+  <div class="footer">Dáta sa ukladajú v tomto prehliadači. Pred väčšou zmenou si môžeš spraviť Export JSON.</div>
 </div>
 
 <dialog id="recipeDialog">
   <div class="dialog">
-    <div class="dialoghead"><div><h3 id="recipeTitle">Receptúra</h3><div class="mini">Množstvo zadávaj v jednotke nastavenej pri surovine alebo spotrebnom materiáli (napr. 0,04 L ginu alebo 1 ks pohára).</div></div><button id="closeRecipe">×</button></div>
+    <div class="dialoghead"><div><h3 id="recipeTitle">Recept / doplnky</h3><div class="mini" id="recipeHelp"></div></div><button id="closeRecipe">×</button></div>
     <div class="dialogbody" id="recipeRows"></div>
-    <button id="addRecipeRow">＋ Pridať surovinu</button>
-    <div class="recipe-summary" id="recipeSummary"></div>
+    <button id="addRecipeRow">＋ Pridať položku</button>
     <div class="dialogactions"><button class="primary" id="doneRecipe">Hotovo</button></div>
   </div>
 </dialog>
 
-<dialog id="resetDialog">
-  <div class="dialog"><h3>Vymazať všetky dáta?</h3><p class="muted">Odstránia sa produkty, receptúry, nákupy, inventúra aj náklady uložené v tomto prehliadači.</p><div class="dialogactions"><button id="cancelReset">Zrušiť</button><button class="danger" id="confirmReset">Vymazať</button></div></div>
-</dialog>
-
-<script>
-const KEY="kostoliste_stanok_v3";
-const V2KEY="kostoliste_stanok_v2";
-const eur=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR",minimumFractionDigits:2});
-const num=new Intl.NumberFormat("sk-SK",{maximumFractionDigits:2});
-const pctNum=new Intl.NumberFormat("sk-SK",{maximumFractionDigits:0});
-const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random();
-const n=v=>{const x=Number(String(v??0).trim().replace(/\s/g,"").replace(",","."));return Number.isFinite(x)?x:0};
-const inputNum=v=>String(v??"").replace(".",",");
-const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-const roundTo=(v,step=.1)=>step>0?Math.ceil((v-1e-9)/step)*step:v;
-
-function baseState(){
-  const beer=uid(), prosecco=uid(), gin=uid(), tonic=uid(), cup05=uid(), cupWine=uid();
-  return {
-    version:6,
-    meta:{eventName:"Ukončenie leta",eventDate:"",eventPlace:"Kostolište",targetMarkup:200,cashRevenue:""},
-    ingredients:[
-      {id:beer,name:"Urpiner Classic 10° – sud",category:"Pivo",unit:"L",packageSize:50,packagePrice:66,supplier:"Urpiner",note:"Demo – uprav alebo zmaž"},
-      {id:prosecco,name:"Prosecco",category:"Víno",unit:"L",packageSize:.75,packagePrice:7,supplier:"",note:"Demo"},
-      {id:gin,name:"Gin",category:"Destilát",unit:"L",packageSize:.7,packagePrice:13.9,supplier:"Ruža",note:"Demo"},
-      {id:tonic,name:"Tonic",category:"Nealko",unit:"L",packageSize:1.5,packagePrice:1.32,supplier:"",note:"Demo"},
-      {id:cup05,name:"Pohár 0,5 l",category:"Spotrebný materiál",unit:"ks",packageSize:100,packagePrice:5,supplier:"",note:"Demo – 100 ks balenie"},
-      {id:cupWine,name:"Pohár na víno",category:"Spotrebný materiál",unit:"ks",packageSize:100,packagePrice:6,supplier:"",note:"Demo – 100 ks balenie"}
-    ],
-    products:[
-      {id:uid(),name:"Urpiner Classic 10°",category:"Pivo",mode:"simple",directIngredientId:beer,salePrice:2,plannedQty:100,actualQty:0,packagingCost:0,otherCost:0,recipe:[{ingredientId:beer,amount:.5},{ingredientId:cup05,amount:1}]},
-      {id:uid(),name:"Prosecco 0,1 l",category:"Víno",mode:"simple",directIngredientId:prosecco,salePrice:1.8,plannedQty:80,actualQty:0,packagingCost:0,otherCost:0,recipe:[{ingredientId:prosecco,amount:.1},{ingredientId:cupWine,amount:1}]},
-      {id:uid(),name:"Gin & Tonic",category:"Mix drink",mode:"recipe",directIngredientId:gin,salePrice:4.5,plannedQty:60,actualQty:0,packagingCost:0,otherCost:.06,recipe:[{ingredientId:gin,amount:.04},{ingredientId:tonic,amount:.15},{ingredientId:cup05,amount:1}]}
-    ],
-    purchases:[],
-    inventory:{},
-    supplementalCosts:[
-      {id:uid(),name:"Prenájom miesta",category:"Prenájom",planAmount:0,qty:1,unitPrice:0,refund:0,note:""},
-      {id:uid(),name:"Ľad",category:"Spotrebný materiál",planAmount:0,qty:1,unitPrice:0,refund:0,note:"Ak ho nechceš rozpočítavať do jednotlivých drinkov"},
-      {id:uid(),name:"Výčap / technika",category:"Technika / prenájom",planAmount:0,qty:1,unitPrice:0,refund:0,note:""}
-    ]
-  };
-}
-
-function migrateV2(v2){
-  const s=baseState(); s.ingredients=[]; s.products=[]; s.purchases=[]; s.inventory={};
-  s.meta={
-    eventName:v2?.meta?.eventName||"Ukončenie leta",
-    eventDate:v2?.meta?.eventDate||"",
-    eventPlace:v2?.meta?.eventPlace||"Kostolište",
-    targetMarkup:200,cashRevenue:""
-  };
-  (v2.products||[]).forEach(p=>{
-    const ing=uid();
-    s.ingredients.push({
-      id:ing,name:p.name,category:p.category||"Iné",unit:"L",
-      packageSize:n(p.packageLiters)||1,packagePrice:n(p.packagePrice),supplier:"",note:p.note||""
-    });
-    s.products.push({
-      id:uid(),name:p.name,category:p.category||"Iné",mode:"simple",directIngredientId:ing,salePrice:n(p.salePrice),
-      plannedQty:n(p.estimatedUnits),actualQty:n(p.actualUnits),
-      packagingCost:n(p.packagingCost),otherCost:n(p.otherCost),
-      recipe:[{ingredientId:ing,amount:n(p.unitLiters)||1}]
-    });
-  });
-  s.supplementalCosts=(v2.fixedCosts||[]).map(c=>({id:c.id||uid(),name:c.name||"",category:"Ostatné",planAmount:n(c.amount),qty:1,unitPrice:n(c.amount),refund:0,note:"Importované zo staršej verzie"}));
-  return s;
-}
-
-function normalize(s){
-  if(!s||typeof s!=="object") return baseState();
-  if(s.version!==3 && s.version!==4 && s.version!==5 && s.version!==6 && Array.isArray(s.products) && s.products.some(p=>"unitLiters" in p)) return migrateV2(s);
-  const oldVersion=n(s.version);
-  s.version=6;
-  s.meta={eventName:"Ukončenie leta",eventDate:"",eventPlace:"Kostolište",targetMarkup:200,cashRevenue:"",...(s.meta||{})};
-  s.ingredients=Array.isArray(s.ingredients)?s.ingredients:[];
-  s.products=Array.isArray(s.products)?s.products:[];
-  s.purchases=Array.isArray(s.purchases)?s.purchases:[];
-  s.inventory=s.inventory&&typeof s.inventory==="object"?s.inventory:{};
-  if(!Array.isArray(s.supplementalCosts)){
-    s.supplementalCosts=(Array.isArray(s.fixedCosts)?s.fixedCosts:[]).map(c=>({
-      id:c.id||uid(),name:c.name||"",category:"Ostatné",planAmount:n(c.amount),
-      qty:1,unitPrice:n(c.amount),refund:0,note:"Importované zo staršej verzie"
-    }));
-  }
-  s.ingredients=s.ingredients.map(x=>({...x,id:x.id||uid(),unit:x.unit||"L"}));
-  s.products=s.products.map(x=>{
-    const recipe=Array.isArray(x.recipe)?x.recipe:[];
-    let direct=x.directIngredientId||null;
-    if(!direct){
-      const first=recipe.find(r=>{
-        const ing=s.ingredients.find(i=>i.id===r.ingredientId);
-        return ing && ing.category!=="Spotrebný materiál";
-      });
-      direct=first?.ingredientId||recipe[0]?.ingredientId||null;
-    }
-    return {...x,id:x.id||uid(),recipe,mode:x.mode||"simple",directIngredientId:direct};
-  });
-  if(oldVersion && oldVersion<5){
-    s.products=s.products.map(x=>({
-      ...x,
-      otherCost:n(x.otherCost)+n(x.packagingCost),
-      packagingCost:0
-    }));
-  }
-  s.purchases=s.purchases.map(x=>({...x,id:x.id||uid()}));
-  s.supplementalCosts=s.supplementalCosts.map(x=>({
-    id:x.id||uid(),name:x.name||"",category:x.category||"Ostatné",
-    planAmount:n(x.planAmount),qty:n(x.qty||1),unitPrice:n(x.unitPrice),
-    refund:n(x.refund),note:x.note||""
-  }));
-  return s;
-}
-
-function load(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(raw) return normalize(JSON.parse(raw));
-    const old=localStorage.getItem(V2KEY);
-    if(old){ const migrated=migrateV2(JSON.parse(old)); localStorage.setItem(KEY,JSON.stringify(migrated)); return migrated; }
-  }catch(e){}
-  return baseState();
-}
-
-let state=load();
-let activeRecipeProduct=null;
-let productQuery="";
-
-function save(){
-  localStorage.setItem(KEY,JSON.stringify(state));
-  const el=document.getElementById("saveStatus");
-  if(el){el.textContent="Uložené ✓";clearTimeout(window._st);window._st=setTimeout(()=>el.textContent="Uložené lokálne",900)}
-}
-
-function ingredient(id){return state.ingredients.find(x=>x.id===id)}
-function ingUnitCost(i){return i&&n(i.packageSize)>0?n(i.packagePrice)/n(i.packageSize):0}
-function recipeCost(p){
-  return (p.recipe||[]).reduce((s,r)=>{const i=ingredient(r.ingredientId);return s+n(r.amount)*ingUnitCost(i)},0);
-}
-function directIngredientForProduct(p){
-  return p?.directIngredientId ? ingredient(p.directIngredientId) : null;
-}
-function directRecipeRow(p){
-  return (p?.recipe||[]).find(r=>r.ingredientId===p.directIngredientId) || null;
-}
-function ensureSimpleProductBase(p){
-  if(!p) return null;
-  let i=directIngredientForProduct(p);
-  if(!i){
-    const id=uid();
-    i={id,name:p.name||"Nákupná položka",category:p.category||"Iné",unit:"L",packageSize:1,packagePrice:0,supplier:"",note:"Automaticky vytvorené k produktu"};
-    state.ingredients.push(i);
-    p.directIngredientId=id;
-  }
-  let rr=directRecipeRow(p);
-  if(!rr){
-    rr={ingredientId:i.id,amount:1};
-    p.recipe=p.recipe||[];
-    p.recipe.unshift(rr);
-  }
-  return {ingredient:i,row:rr};
-}
-function productModeSelect(p){
-  return `<select data-scope="product" data-id="${p.id}" data-field="mode">
-    <option value="simple" ${p.mode!=="recipe"?"selected":""}>Jednoduchý</option>
-    <option value="recipe" ${p.mode==="recipe"?"selected":""}>Receptúra</option>
-  </select>`;
-}
-function directField(p,field){
-  if(p.mode==="recipe") return `<span class="mini">cez receptúru</span>`;
-  const base=ensureSimpleProductBase(p);
-  const i=base.ingredient, rr=base.row;
-  if(field==="unitAmount"){
-    return `<div class="inline" style="flex-wrap:nowrap">${fieldInput("direct",p.id,"unitAmount",rr.amount)}<span class="mini">${esc(i.unit)}</span></div>`;
-  }
-  if(field==="packageSize"){
-    return `<div class="inline" style="flex-wrap:nowrap">${fieldInput("direct",p.id,"packageSize",i.packageSize)}<span class="mini">${esc(i.unit)}</span></div>`;
-  }
-  if(field==="packagePrice") return fieldInput("direct",p.id,"packagePrice",i.packagePrice);
-  return "";
-}
-function productCalc(p){
-  const rc=recipeCost(p), extras=n(p.otherCost)+n(p.packagingCost), cost=rc+extras, profit=n(p.salePrice)-cost;
-  const markup=cost>0?profit/cost*100:0;
-  const rec=roundTo(cost*(1+n(state.meta.targetMarkup)/100),.1);
-  return {
-    recipeCost:rc,extras,cost,profit,markup,recommended:rec,
-    planRevenue:n(p.salePrice)*n(p.plannedQty),actualRevenue:n(p.salePrice)*n(p.actualQty),
-    planProfit:profit*n(p.plannedQty),theoreticalActualProfit:profit*n(p.actualQty)
-  };
-}
-function plannedIngredient(id){
-  let amount=0;
-  state.products.forEach(p=>(p.recipe||[]).forEach(r=>{if(r.ingredientId===id) amount+=n(r.amount)*n(p.plannedQty)}));
-  const i=ingredient(id), packs=i&&n(i.packageSize)>0?Math.ceil(amount/n(i.packageSize)):0;
-  return {amount,packs,cost:packs*n(i?.packagePrice)};
-}
-function actualRecipeUsage(id){
-  let amount=0;
-  state.products.forEach(p=>(p.recipe||[]).forEach(r=>{if(r.ingredientId===id) amount+=n(r.amount)*n(p.actualQty)}));
-  return amount;
-}
-function purchaseLinesFor(id){return state.purchases.filter(x=>x.ingredientId===id)}
-function inventoryCalc(id){
-  const i=ingredient(id); if(!i) return {boughtPacks:0,returnedPacks:0,gross:0,returnedValue:0,netCost:0,netAmount:0,usedAmount:0,shops:""};
-  const lines=purchaseLinesFor(id);
-  let boughtPacks=0,returnedPacks=0,gross=0,returnedValue=0,netCost=0;
-  const shops=[];
-  lines.forEach(x=>{
-    const q=n(x.qtyPackages),r=Math.min(q,n(x.returnedPackages)),pr=n(x.pricePerPackage);
-    boughtPacks+=q;returnedPacks+=r;gross+=q*pr;returnedValue+=r*pr;netCost+=(q-r)*pr;
-    if((x.supplier||"").trim()) shops.push((x.supplier||"").trim());
-  });
-  const netAmount=(boughtPacks-returnedPacks)*n(i.packageSize);
-  const remainder=Math.max(0,n(state.inventory[id]?.openedRemainder));
-  const usedAmount=Math.max(0,netAmount-remainder);
-  return {boughtPacks,returnedPacks,gross,returnedValue,netCost,netAmount,remainder,usedAmount,shops:[...new Set(shops)].join(", ")};
-}
-function supplementalCostCalc(c){
-  const gross=n(c.qty)*n(c.unitPrice);
-  const actual=Math.max(0,gross-n(c.refund));
-  return {gross,actual};
-}
-function supplementalTotals(){
-  let plan=0,actual=0,gross=0,refund=0;
-  (state.supplementalCosts||[]).forEach(c=>{
-    const x=supplementalCostCalc(c);
-    plan+=n(c.planAmount);actual+=x.actual;gross+=x.gross;refund+=n(c.refund);
-  });
-  return {plan,actual,gross,refund};
-}
-function totals(){
-  let planRevenue=0,planVariable=0,planPurchase=0,actualByUnits=0,actualExtras=0;
-  state.products.forEach(p=>{
-    const c=productCalc(p);
-    planRevenue+=c.planRevenue;
-    planVariable+=(c.cost)*n(p.plannedQty);
-    actualByUnits+=c.actualRevenue;
-    actualExtras+=c.extras*n(p.actualQty);
-  });
-  state.ingredients.forEach(i=>planPurchase+=plannedIngredient(i.id).cost);
-  let actualPurchase=0,returnedValue=0;
-  state.ingredients.forEach(i=>{const c=inventoryCalc(i.id);actualPurchase+=c.netCost;returnedValue+=c.returnedValue});
-  const supp=supplementalTotals();
-  const hasCash=String(state.meta.cashRevenue??"").trim()!=="";
-  const actualRevenue=hasCash?n(state.meta.cashRevenue):actualByUnits;
-  const planContribution=planRevenue-planVariable;
-  const ratio=planRevenue>0?planContribution/planRevenue:0;
-  const breakEvenRevenue=ratio>0?supp.plan/ratio:0;
-  const avgContributionUnits=state.products.reduce((s,p)=>s+n(p.plannedQty),0);
-  const avgContribution=avgContributionUnits>0?planContribution/avgContributionUnits:0;
-  const breakEvenUnits=avgContribution>0?Math.ceil(fixed/avgContribution):0;
-  return {
-    planRevenue,planVariable,planPurchase,planNet:planRevenue-planVariable-supp.plan,
-    supplementalPlan:supp.plan,supplementalActual:supp.actual,
-    actualByUnits,actualRevenue,actualPurchase,actualExtras,
-    actualNet:actualRevenue-actualPurchase-actualExtras-supp.actual,
-    returnedValue,breakEvenRevenue,breakEvenUnits,ratio
-  };
-}
-
-function fieldInput(scope,id,field,value,type="number",cls=""){
-  const numeric=type==="number";
-  const shown=numeric?inputNum(value):value;
-  return `<input class="${cls}" data-scope="${scope}" data-id="${id}" data-field="${field}" type="${numeric?"text":type}" ${numeric?'inputmode="decimal" autocomplete="off"':""} value="${esc(shown??"")}">`;
-}
-function categorySelect(scope,id,value){
-  const cats=scope==="ingredient"
-    ?["Pivo","Víno","Destilát","Nealko","Spotrebný materiál","Iné"]
-    :["Pivo","Víno","Destilát","Nealko","Mix drink","Iné"];
-  return `<select data-scope="${scope}" data-id="${id}" data-field="category">${cats.map(c=>`<option ${c===value?"selected":""}>${c}</option>`).join("")}</select>`
-}
-function ingredientSelect(purchaseId,value){
-  return `<select data-scope="purchase" data-id="${purchaseId}" data-field="ingredientId">${state.ingredients.map(i=>`<option value="${i.id}" ${i.id===value?"selected":""}>${esc(i.name)}</option>`).join("")}</select>`
-}
-
-function renderProducts(){
-  const body=document.getElementById("productBody");
-  const q=productQuery.toLowerCase();
-  const rows=state.products.filter(p=>!q||(p.name||"").toLowerCase().includes(q));
-  body.innerHTML=rows.map(p=>{
-    const c=productCalc(p);
-    const rec=(p.recipe||[]).map(r=>{const i=ingredient(r.ingredientId);return i?`${i.name}: ${num.format(n(r.amount))} ${i.unit}`:"Neznáma surovina"}).join(" + ");
-    return `<tr>
-      <td>${fieldInput("product",p.id,"name",p.name,"text","name")}</td>
-      <td>${categorySelect("product",p.id,p.category)}</td>
-      <td>${productModeSelect(p)}</td>
-      <td>${directField(p,"unitAmount")}</td>
-      <td>${directField(p,"packageSize")}</td>
-      <td>${directField(p,"packagePrice")}</td>
-      <td>${fieldInput("product",p.id,"salePrice",p.salePrice)}</td>
-      <td>${fieldInput("product",p.id,"plannedQty",p.plannedQty)}</td>
-      <td>${fieldInput("product",p.id,"actualQty",p.actualQty)}</td>
-      <td><button class="small" data-action="recipe" data-id="${p.id}">Receptúra</button><div class="mini" style="max-width:240px;margin-top:4px">${esc(rec||"bez receptu")}</div></td>
-      <td class="calc">${eur.format(c.recipeCost)}</td>
-      <td>${fieldInput("product",p.id,"otherCost",p.otherCost)}</td>
-      <td class="calc">${eur.format(c.cost)}</td>
-      <td class="calc ${c.profit>=0?"good":"bad"}">${eur.format(c.profit)}</td>
-      <td class="calc">${pctNum.format(c.markup)} %</td>
-      <td class="calc">${eur.format(c.recommended)}</td>
-      <td class="calc ${c.planProfit>=0?"good":"bad"}">${eur.format(c.planProfit)}</td>
-      <td class="calc">${eur.format(c.actualRevenue)}</td>
-      <td><div class="row-actions"><button class="small" data-action="duplicateProduct" data-id="${p.id}">⧉</button><button class="small danger" data-action="deleteProduct" data-id="${p.id}">×</button></div></td>
-    </tr>`;
-  }).join("");
-  document.getElementById("productEmpty").hidden=rows.length>0;
-}
-
-function renderIngredients(){
-  const body=document.getElementById("ingredientBody");
-  body.innerHTML=state.ingredients.map(i=>{
-    const p=plannedIngredient(i.id);
-    return `<tr>
-      <td>${fieldInput("ingredient",i.id,"name",i.name,"text","name")}</td>
-      <td>${categorySelect("ingredient",i.id,i.category)}</td>
-      <td><select data-scope="ingredient" data-id="${i.id}" data-field="unit"><option ${i.unit==="L"?"selected":""}>L</option><option ${i.unit==="ks"?"selected":""}>ks</option></select></td>
-      <td>${fieldInput("ingredient",i.id,"packageSize",i.packageSize)}</td>
-      <td>${fieldInput("ingredient",i.id,"packagePrice",i.packagePrice)}</td>
-      <td class="calc">${eur.format(ingUnitCost(i))} / ${esc(i.unit)}</td>
-      <td>${fieldInput("ingredient",i.id,"supplier",i.supplier,"text")}</td>
-      <td class="calc">${num.format(p.amount)} ${esc(i.unit)}</td>
-      <td class="calc"><span class="pill">${p.packs}</span></td>
-      <td class="calc">${eur.format(p.cost)}</td>
-      <td>${fieldInput("ingredient",i.id,"note",i.note,"text","note")}</td>
-      <td><button class="small danger" data-action="deleteIngredient" data-id="${i.id}">×</button></td>
-    </tr>`;
-  }).join("");
-  document.getElementById("ingredientEmpty").hidden=state.ingredients.length>0;
-}
-
-function renderPurchases(){
-  const body=document.getElementById("purchaseBody");
-  body.innerHTML=state.purchases.map(x=>{
-    const i=ingredient(x.ingredientId);
-    const q=n(x.qtyPackages),r=Math.min(q,n(x.returnedPackages)),pr=n(x.pricePerPackage);
-    return `<tr>
-      <td>${ingredientSelect(x.id,x.ingredientId)}</td>
-      <td>${fieldInput("purchase",x.id,"supplier",x.supplier,"text")}</td>
-      <td>${fieldInput("purchase",x.id,"qtyPackages",x.qtyPackages)}</td>
-      <td>${fieldInput("purchase",x.id,"pricePerPackage",x.pricePerPackage)}</td>
-      <td>${fieldInput("purchase",x.id,"returnedPackages",x.returnedPackages)}</td>
-      <td class="calc">${eur.format(q*pr)}</td>
-      <td class="calc good">${eur.format(r*pr)}</td>
-      <td class="calc">${eur.format((q-r)*pr)}</td>
-      <td><button class="small danger" data-action="deletePurchase" data-id="${x.id}">×</button></td>
-    </tr>`;
-  }).join("");
-  document.getElementById("purchaseEmpty").hidden=state.purchases.length>0;
-
-  document.getElementById("inventoryBody").innerHTML=state.ingredients.map(i=>{
-    const c=inventoryCalc(i.id), theoretical=actualRecipeUsage(i.id), diff=c.usedAmount-theoretical;
-    const diffClass=Math.abs(diff)<0.0001?"muted":diff>0?"warn":"good";
-    return `<tr>
-      <td><strong>${esc(i.name)}</strong><div class="mini">${esc(i.unit)}</div></td>
-      <td>${esc(c.shops||i.supplier||"—")}</td>
-      <td class="calc">${num.format(c.netAmount)} ${esc(i.unit)}</td>
-      <td class="calc good">${num.format(c.returnedPacks)} bal.</td>
-      <td>${fieldInput("inventory",i.id,"openedRemainder",state.inventory[i.id]?.openedRemainder??0)}</td>
-      <td class="calc">${num.format(c.usedAmount)} ${esc(i.unit)}</td>
-      <td class="calc">${eur.format(c.gross)}</td>
-      <td class="calc good">${eur.format(c.returnedValue)}</td>
-      <td class="calc">${eur.format(c.netCost)}</td>
-      <td class="calc ${diffClass}">${diff>=0?"+":""}${num.format(diff)} ${esc(i.unit)}<div class="mini">inventúra − receptúry</div></td>
-    </tr>`;
-  }).join("");
-}
-
-function supplementalCategorySelect(id,value){
-  const cats=["Prenájom","Spotrebný materiál","Technika / prenájom","Doprava","Personál","Poplatky","Ostatné"];
-  return `<select data-scope="cost" data-id="${id}" data-field="category">${cats.map(c=>`<option ${c===value?"selected":""}>${c}</option>`).join("")}</select>`;
-}
-function renderCosts(){
-  const host=document.getElementById("costRows");
-  host.innerHTML=(state.supplementalCosts||[]).map(c=>{
-    const x=supplementalCostCalc(c);
-    return `<tr>
-      <td>${fieldInput("cost",c.id,"name",c.name,"text","name")}</td>
-      <td>${supplementalCategorySelect(c.id,c.category)}</td>
-      <td>${fieldInput("cost",c.id,"planAmount",c.planAmount)}</td>
-      <td>${fieldInput("cost",c.id,"qty",c.qty)}</td>
-      <td>${fieldInput("cost",c.id,"unitPrice",c.unitPrice)}</td>
-      <td>${fieldInput("cost",c.id,"refund",c.refund)}</td>
-      <td class="calc">${eur.format(x.actual)}</td>
-      <td>${fieldInput("cost",c.id,"note",c.note,"text","note")}</td>
-      <td><button class="small danger" data-action="deleteCost" data-id="${c.id}">×</button></td>
-    </tr>`;
-  }).join("");
-  document.getElementById("costEmpty").hidden=(state.supplementalCosts||[]).length>0;
-  const st=supplementalTotals();
-  document.getElementById("suppPlanTotal").textContent=eur.format(st.plan);
-  document.getElementById("suppActualTotal").textContent=eur.format(st.actual);
-}
-
-function renderRecipe(){
-  const p=state.products.find(x=>x.id===activeRecipeProduct);
-  if(!p){document.getElementById("recipeDialog").close();return}
-  document.getElementById("recipeTitle").textContent="Receptúra – "+p.name;
-  const rows=document.getElementById("recipeRows");
-  rows.innerHTML=(p.recipe||[]).map((r,idx)=>`<div class="recipe-row">
-    <select data-recipe-index="${idx}" data-recipe-field="ingredientId">
-      ${state.ingredients.map(i=>`<option value="${i.id}" ${i.id===r.ingredientId?"selected":""}>${esc(i.name)} (${esc(i.unit)})</option>`).join("")}
-    </select>
-    <input type="text" inputmode="decimal" autocomplete="off" value="${esc(inputNum(r.amount))}" data-recipe-index="${idx}" data-recipe-field="amount">
-    <button class="small danger" data-action="deleteRecipeRow" data-index="${idx}">×</button>
-  </div>`).join("") || `<div class="empty">Recept je prázdny. Pridaj prvú surovinu.</div>`;
-  const c=productCalc(p);
-  document.getElementById("recipeSummary").textContent=`Náklad receptu ${eur.format(c.recipeCost)} + iný jednotkový náklad ${eur.format(c.extras)} = celkový náklad ${eur.format(c.cost)}.`;
-}
-
-function renderMeta(){
-  eventName.value=state.meta.eventName||"";eventDate.value=state.meta.eventDate||"";eventPlace.value=state.meta.eventPlace||"";
-  targetMarkup.value=inputNum(state.meta.targetMarkup);cashRevenue.value=inputNum(state.meta.cashRevenue??"");
-}
-
-function updateSummary(){
-  const t=totals();
-  const sets={
-    planRevenue:t.planRevenue,planNet:t.planNet,planPurchase:t.planPurchase,breakEvenRevenue:t.breakEvenRevenue,
-    actualRevenue:t.actualRevenue,actualPurchase:t.actualPurchase,actualNet:t.actualNet,returnedValue:t.returnedValue,
-    rPlanRevenue:t.planRevenue,rPlanVariable:t.planVariable,rSuppPlan:t.supplementalPlan,rPlanNet:t.planNet,
-    rBreakEven:t.breakEvenRevenue,rActualRevenue:t.actualRevenue,rActualPurchase:t.actualPurchase,
-    rActualExtras:t.actualExtras,rSuppActual:t.supplementalActual,rActualNet:t.actualNet,
-    invPurchaseCost:t.actualPurchase,invSupplementalCost:t.supplementalActual,invExtrasCost:t.actualExtras,
-    invTotalCost:t.actualPurchase+t.supplementalActual+t.actualExtras
-  };
-  Object.entries(sets).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=eur.format(v)});
-  document.getElementById("planNet").className="value "+(t.planNet>=0?"good":"bad");
-  document.getElementById("actualNet").className="value "+(t.actualNet>=0?"good":"bad");
-  document.getElementById("rPlanNet").className=t.planNet>=0?"good":"bad";
-  document.getElementById("rActualNet").className=t.actualNet>=0?"good":"bad";
-  const planPct=t.planRevenue>0?t.breakEvenRevenue/t.planRevenue*100:0;
-  document.getElementById("breakEvenMeta").textContent=t.breakEvenRevenue>0?`${pctNum.format(planPct)} % plánovanej tržby`:"bez fixných nákladov";
-  document.getElementById("breakEvenText").textContent=t.breakEvenRevenue>0
-    ?`Pri aktuálnom plánovanom mixe produktov potrebuješ približne tržbu ${eur.format(t.breakEvenRevenue)}, aby sa pokryli fixné náklady. To zodpovedá približne ${t.breakEvenUnits} priemerným predajom podľa plánovaného mixu.`
-    :"Ak sú plánované doplnkové náklady nulové, bod zvratu je 0 €. Po ich doplnení sa prepočíta automaticky.";
-}
-
-function renderAll(){
-  renderMeta();renderProducts();renderIngredients();renderPurchases();renderCosts();updateSummary();
-}
-
-function updateObject(scope,id,field,value){
-  if(scope==="product"){
-    const x=state.products.find(x=>x.id===id);
-    if(x){
-      x[field]=value;
-      if(field==="mode" && value==="simple") ensureSimpleProductBase(x);
-      if(field==="name" && x.mode!=="recipe"){
-        const i=directIngredientForProduct(x);
-        if(i && (!i.name || i.note==="Automaticky vytvorené k produktu")) i.name=value;
-      }
-      if(field==="category" && x.mode!=="recipe"){
-        const i=directIngredientForProduct(x);
-        if(i && i.category!=="Spotrebný materiál") i.category=value;
-      }
-    }
-  }
-  if(scope==="direct"){
-    const p=state.products.find(x=>x.id===id);
-    const base=ensureSimpleProductBase(p);
-    if(base){
-      if(field==="unitAmount") base.row.amount=value;
-      if(field==="packageSize") base.ingredient.packageSize=value;
-      if(field==="packagePrice") base.ingredient.packagePrice=value;
-    }
-  }
-  if(scope==="ingredient"){const x=state.ingredients.find(x=>x.id===id);if(x)x[field]=value}
-  if(scope==="purchase"){const x=state.purchases.find(x=>x.id===id);if(x)x[field]=value}
-  if(scope==="cost"){const x=(state.supplementalCosts||[]).find(x=>x.id===id);if(x)x[field]=value}
-  if(scope==="inventory"){state.inventory[id]=state.inventory[id]||{};state.inventory[id][field]=value}
-}
-function isNumericField(scope,field){
-  return ["salePrice","plannedQty","actualQty","packagingCost","otherCost","packageSize","packagePrice","qtyPackages","pricePerPackage","returnedPackages","amount","openedRemainder","planAmount","qty","unitPrice","refund","unitAmount"].includes(field);
-}
-
-document.addEventListener("input",e=>{
-  const el=e.target,scope=el.dataset.scope,id=el.dataset.id,field=el.dataset.field;
-  if(scope&&id&&field){
-    updateObject(scope,id,field,isNumericField(scope,field)?n(el.value):el.value);
-    save();
-    updateSummary();
-    return;
-  }
-  if(el.id==="productSearch"){productQuery=el.value;renderProducts();return}
-  if(["eventName","eventDate","eventPlace","targetMarkup","cashRevenue"].includes(el.id)){
-    const map={eventName:"eventName",eventDate:"eventDate",eventPlace:"eventPlace",targetMarkup:"targetMarkup",cashRevenue:"cashRevenue"};
-    state.meta[map[el.id]]=el.id==="targetMarkup"?n(el.value):el.value;
-    save();
-    updateSummary();
-  }
-});
-
-document.addEventListener("change",e=>{
-  const el=e.target,scope=el.dataset.scope,id=el.dataset.id,field=el.dataset.field;
-  if(scope&&id&&field){
-    updateObject(scope,id,field,isNumericField(scope,field)?n(el.value):el.value);save();renderAll();
-  }
-});
-
-document.addEventListener("click",e=>{
-  const tab=e.target.closest("[data-tab]");
-  if(tab){
-    document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b===tab));
-    document.querySelectorAll(".tab").forEach(s=>s.classList.toggle("active",s.id==="tab-"+tab.dataset.tab));return;
-  }
-  const b=e.target.closest("[data-action]");
-  if(!b)return;
-  const id=b.dataset.id;
-  if(b.dataset.action==="recipe"){activeRecipeProduct=id;renderRecipe();recipeDialog.showModal()}
-  if(b.dataset.action==="duplicateProduct"){
-    const p=state.products.find(x=>x.id===id);if(p){const cp=structuredClone(p);cp.id=uid();cp.name+=" – kópia";state.products.push(cp);save();renderAll()}
-  }
-  if(b.dataset.action==="deleteProduct"){state.products=state.products.filter(x=>x.id!==id);save();renderAll()}
-  if(b.dataset.action==="deleteIngredient"){
-    const used=state.products.some(p=>(p.recipe||[]).some(r=>r.ingredientId===id));
-    if(used&&!confirm("Táto surovina sa používa v receptúre. Naozaj ju chceš zmazať?"))return;
-    state.ingredients=state.ingredients.filter(x=>x.id!==id);
-    state.purchases=state.purchases.filter(x=>x.ingredientId!==id);
-    delete state.inventory[id];
-    state.products.forEach(p=>p.recipe=(p.recipe||[]).filter(r=>r.ingredientId!==id));
-    save();renderAll()
-  }
-  if(b.dataset.action==="deletePurchase"){state.purchases=state.purchases.filter(x=>x.id!==id);save();renderAll()}
-  if(b.dataset.action==="deleteCost"){state.supplementalCosts=(state.supplementalCosts||[]).filter(x=>x.id!==id);save();renderAll()}
-  if(b.dataset.action==="deleteRecipeRow"){
-    const p=state.products.find(x=>x.id===activeRecipeProduct);if(p){p.recipe.splice(Number(b.dataset.index),1);save();renderRecipe();renderAll()}
-  }
-});
-
-document.getElementById("addProduct").onclick=()=>{
-  const ingId=uid();
-  state.ingredients.push({id:ingId,name:"Nový produkt",category:"Iné",unit:"L",packageSize:1,packagePrice:0,supplier:"",note:"Automaticky vytvorené k produktu"});
-  state.products.push({id:uid(),name:"Nový produkt",category:"Iné",mode:"simple",directIngredientId:ingId,salePrice:0,plannedQty:0,actualQty:0,packagingCost:0,otherCost:0,recipe:[{ingredientId:ingId,amount:0.5}]});
-  save();renderAll()
-};
-document.getElementById("addIngredient").onclick=()=>{
-  state.ingredients.push({id:uid(),name:"Nová položka",category:"Iné",unit:"L",packageSize:1,packagePrice:0,supplier:"",note:""});save();renderAll()
-};
-document.getElementById("addPurchase").onclick=()=>{
-  const i=state.ingredients[0];if(!i){alert("Najprv pridaj aspoň jednu surovinu.");return}
-  state.purchases.push({id:uid(),ingredientId:i.id,supplier:i.supplier||"",qtyPackages:0,pricePerPackage:n(i.packagePrice),returnedPackages:0});save();renderAll()
-};
-document.getElementById("seedPurchases").onclick=()=>{
-  if(!state.ingredients.length)return;
-  if(state.purchases.length && !confirm("Reálne nákupy už obsahujú riadky. Pridať k nim ďalšie riadky z plánu?"))return;
-  state.ingredients.forEach(i=>{
-    const p=plannedIngredient(i.id);
-    if(p.packs>0) state.purchases.push({id:uid(),ingredientId:i.id,supplier:i.supplier||"",qtyPackages:p.packs,pricePerPackage:n(i.packagePrice),returnedPackages:0});
-  });
-  save();renderAll()
-};
-document.getElementById("addCost").onclick=()=>{state.supplementalCosts.push({id:uid(),name:"Nový náklad",category:"Ostatné",planAmount:0,qty:1,unitPrice:0,refund:0,note:""});save();renderAll()};
-
-document.getElementById("closeRecipe").onclick=()=>recipeDialog.close();
-document.getElementById("doneRecipe").onclick=()=>recipeDialog.close();
-document.getElementById("addRecipeRow").onclick=()=>{
-  const p=state.products.find(x=>x.id===activeRecipeProduct);if(!p)return;
-  if(!state.ingredients.length){alert("Najprv pridaj surovinu.");return}
-  p.recipe.push({ingredientId:state.ingredients[0].id,amount:0});save();renderRecipe();renderAll()
-};
-document.getElementById("recipeRows").addEventListener("input",e=>{
-  const p=state.products.find(x=>x.id===activeRecipeProduct);if(!p)return;
-  const idx=Number(e.target.dataset.recipeIndex),field=e.target.dataset.recipeField;if(!Number.isInteger(idx)||!field)return;
-  p.recipe[idx][field]=field==="amount"?n(e.target.value):e.target.value;
-  save();
-  updateSummary();
-});
-document.getElementById("recipeRows").addEventListener("change",e=>{
-  const p=state.products.find(x=>x.id===activeRecipeProduct);if(!p)return;
-  const idx=Number(e.target.dataset.recipeIndex),field=e.target.dataset.recipeField;if(!Number.isInteger(idx)||!field)return;
-  p.recipe[idx][field]=field==="amount"?n(e.target.value):e.target.value;save();renderRecipe();renderAll()
-});
-
-function download(name,content,type){
-  const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");
-  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
-}
-document.getElementById("exportJson").onclick=()=>download("stanok-data-v6.json",JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2),"application/json");
-document.getElementById("importJson").onchange=async e=>{
-  const f=e.target.files?.[0];if(!f)return;
-  try{state=normalize(JSON.parse(await f.text()));save();renderAll()}catch(err){alert("JSON sa nepodarilo načítať.");}
-  e.target.value="";
-};
-document.getElementById("exportCsv").onclick=()=>{
-  const rows=[["Typ","Názov","Kategória","Predajná cena","Plán ks","Skutočne ks","Náklad/ks","Zisk/ks","Prirážka %","Odporúčaná cena","Plán tržba","Skutočná tržba"]];
-  state.products.forEach(p=>{const c=productCalc(p);rows.push(["Produkt",p.name,p.category,p.salePrice,p.plannedQty,p.actualQty,c.cost,c.profit,c.markup,c.recommended,c.planRevenue,c.actualRevenue])});
-  rows.push([]);
-  rows.push(["Inventúra","Surovina","Obchody","Netto množstvo","Vrátené balenia","Zvyšok otvoreného","Reálne minuté","Reálny náklad po vratke"]);
-  state.ingredients.forEach(i=>{const c=inventoryCalc(i.id);rows.push(["Inventúra",i.name,c.shops,c.netAmount,c.returnedPacks,c.remainder,c.usedAmount,c.netCost])});
-  const q=v=>`"${String(v??"").replaceAll('"','""')}"`;
-  download("stanok-prehlad-v6.csv","\ufeff"+rows.map(r=>r.map(q).join(";")).join("\n"),"text/csv;charset=utf-8");
-};
-
-const resetDialog=document.getElementById("resetDialog");
-const resetBtn=document.createElement("button");resetBtn.textContent="Vymazať všetko";resetBtn.className="danger";resetBtn.onclick=()=>resetDialog.showModal();
-document.querySelector(".actions").appendChild(resetBtn);
-document.getElementById("cancelReset").onclick=()=>resetDialog.close();
-document.getElementById("confirmReset").onclick=()=>{state=baseState();save();renderAll();resetDialog.close()};
-
-renderAll();
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
-}
-</script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
