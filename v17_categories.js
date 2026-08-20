@@ -1,10 +1,7 @@
-// v27 – bezpečné kategórie + manuálna obnova dát + plánový zisk + prepojená inventúra.
+// v28 – bezpečné kategórie + plánový zisk + prepojená inventúra podľa receptov.
 
 const _safeOriginalSave=save;
-save=function(){
-  try{const raw=localStorage.getItem(KEY);if(raw){localStorage.setItem("kostoliste_stanok_backup_"+Date.now(),raw);const backups=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("kostoliste_stanok_backup_"))backups.push(k)}backups.sort().reverse().slice(10).forEach(k=>localStorage.removeItem(k))}}catch(e){}
-  _safeOriginalSave();
-};
+save=function(){try{const raw=localStorage.getItem(KEY);if(raw){localStorage.setItem("kostoliste_stanok_backup_"+Date.now(),raw);const backups=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("kostoliste_stanok_backup_"))backups.push(k)}backups.sort().reverse().slice(10).forEach(k=>localStorage.removeItem(k))}}catch(e){}_safeOriginalSave();};
 
 const RESULT_CATEGORIES=["Pivo","Víno","Nealko","Alko","Drinky","Iné"];
 function normalizeProductCategory(cat){const c=String(cat||"").trim();if(c==="Destilát")return "Alko";if(c==="Mix drink")return "Drinky";if(RESULT_CATEGORIES.includes(c))return c;return "Iné"}
@@ -29,5 +26,5 @@ document.addEventListener("input",e=>{const s=e.target?.dataset?.scope,f=e.targe
 document.addEventListener("change",e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==="inventory"||s==="manual"||(s==="product"&&f==="category"))renderCategorySummary()});
 
 setupPlanPresentation();updateCategoryPanelLabels();renderCategorySummary();updateSummary();
-(function loadRecoveryTool(){if(document.getElementById('manualRecoveryScript'))return;const s=document.createElement('script');s.id='manualRecoveryScript';s.src='recovery.js?v=27';document.body.appendChild(s)})();
-(function loadV27Products(){if(document.getElementById('v22ProductScript'))return;const s=document.createElement('script');s.id='v22ProductScript';s.src='v22_products.js?v=27';s.onload=()=>{const inv=document.createElement('script');inv.id='v27InventoryScript';inv.src='v27_inventory.js?v=27';inv.onload=()=>{document.title='Stánok v27';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v27';setupPlanPresentation();renderAll();renderActualProfitSummary();updateSummary()};document.body.appendChild(inv)};document.body.appendChild(s)})();
+(function loadRecoveryTool(){if(document.getElementById('manualRecoveryScript'))return;const s=document.createElement('script');s.id='manualRecoveryScript';s.src='recovery.js?v=28';document.body.appendChild(s)})();
+(function loadV28Products(){if(document.getElementById('v22ProductScript'))return;const s=document.createElement('script');s.id='v22ProductScript';s.src='v22_products.js?v=28';s.onload=()=>{const inv=document.createElement('script');inv.id='v27InventoryScript';inv.src='v27_inventory.js?v=28';inv.onload=()=>{document.title='Stánok v28';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v28';setupPlanPresentation();renderAll();renderActualProfitSummary();updateSummary()};document.body.appendChild(inv)};document.body.appendChild(s)})();
