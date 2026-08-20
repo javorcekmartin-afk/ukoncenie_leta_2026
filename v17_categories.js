@@ -57,5 +57,5 @@ document.addEventListener("input",e=>{const s=e.target?.dataset?.scope,f=e.targe
 document.addEventListener("change",e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==="inventory"||s==="manual"||(s==="product"&&f==="category"))renderCategorySummary();if(s==="product"&&f==="actualSoldQty")renderActualProfitSummary()});
 
 updateCategoryPanelLabels();renderProducts();renderCategorySummary();renderActualProfitSummary();
-(function loadRecoveryTool(){if(document.getElementById('manualRecoveryScript'))return;const s=document.createElement('script');s.id='manualRecoveryScript';s.src='recovery.js?v=22';document.body.appendChild(s)})();
-(function loadV22Products(){if(document.getElementById('v22ProductScript'))return;const s=document.createElement('script');s.id='v22ProductScript';s.src='v22_products.js?v=22';document.body.appendChild(s)})();
+(function loadRecoveryTool(){if(document.getElementById('manualRecoveryScript'))return;const s=document.createElement('script');s.id='manualRecoveryScript';s.src='recovery.js?v=24';document.body.appendChild(s)})();
+(function loadV24Products(){if(document.getElementById('v22ProductScript'))return;const s=document.createElement('script');s.id='v22ProductScript';s.src='v22_products.js?v=24';s.onload=()=>{document.title='Stánok v24';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v24'};document.body.appendChild(s)})();
