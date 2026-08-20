@@ -1,7 +1,7 @@
 -- Cloud sync pre Stánok – bezpečný prístup cez event kód + PIN.
 -- Spusti celý skript v Supabase SQL Editor.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.event_states (
   event_code text primary key,
@@ -19,14 +19,14 @@ create or replace function public.cloud_get_state(p_event_code text, p_pin text)
 returns table(state jsonb, updated_at timestamptz)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   return query
   select e.state, e.updated_at
   from public.event_states e
   where e.event_code = upper(trim(p_event_code))
-    and e.pin_hash = crypt(p_pin, e.pin_hash);
+    and e.pin_hash = extensions.crypt(p_pin, e.pin_hash);
 end;
 $$;
 
@@ -34,7 +34,7 @@ create or replace function public.cloud_save_state(p_event_code text, p_pin text
 returns timestamptz
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_code text := upper(trim(p_event_code));
@@ -52,9 +52,9 @@ begin
 
   if v_hash is null then
     insert into public.event_states(event_code, pin_hash, state, updated_at)
-    values(v_code, crypt(p_pin, gen_salt('bf')), p_state, v_now);
+    values(v_code, extensions.crypt(p_pin, extensions.gen_salt('bf')), p_state, v_now);
   else
-    if v_hash <> crypt(p_pin, v_hash) then
+    if v_hash <> extensions.crypt(p_pin, v_hash) then
       raise exception 'Nesprávny PIN';
     end if;
     update public.event_states set state = p_state, updated_at = v_now where event_code = v_code;
