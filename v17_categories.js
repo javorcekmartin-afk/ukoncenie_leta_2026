@@ -1,55 +1,117 @@
-// v17 – kategórie produktov dostávajú praktický význam vo výsledku.
-// Skutočné tržby podľa kategórií neodhadujeme, pretože neevidujeme skutočne predané kusy.
+// v18 logika kategórií – skutočný stav podľa reálnej inventúry.
+// Kategórie: Pivo, Víno, Nealko, Alko, Drinky, Iné.
+// Ak sa jednoduchý produkt používa v receptúre, jeho reálny náklad ide automaticky do Drinky.
+// Suroviny použité v receptúrach idú do Drinky; spotrebný materiál (poháre, slamky...) ide do Iné.
 
-function categorySummary(){
-  const groups={};
-  let totalRevenue=0;
-  state.products.forEach(p=>{
-    const category=(p.category||"Iné").trim()||"Iné";
-    const qty=n(p.plannedQty);
-    const revenue=n(p.salePrice)*qty;
-    const calc=productCalc(p);
-    const theoreticalCost=calc.cost*qty;
-    const theoreticalProfit=revenue-theoreticalCost;
-    const g=groups[category]||(groups[category]={category,qty:0,revenue:0,cost:0,profit:0,products:0});
-    g.qty+=qty;
-    g.revenue+=revenue;
-    g.cost+=theoreticalCost;
-    g.profit+=theoreticalProfit;
-    g.products+=1;
-    totalRevenue+=revenue;
+const RESULT_CATEGORIES=["Pivo","Víno","Nealko","Alko","Drinky","Iné"];
+
+function normalizeProductCategory(cat){
+  const c=String(cat||"").trim();
+  if(c==="Destilát")return "Alko";
+  if(c==="Mix drink")return "Drinky";
+  if(RESULT_CATEGORIES.includes(c))return c;
+  return "Iné";
+}
+
+// V záložke Produkty ponechávame iba kategórie, ktoré majú význam vo finálnom prehľade.
+categorySelect=function(id,val){
+  const current=normalizeProductCategory(val);
+  return `<select data-scope="product" data-id="${id}" data-field="category">${RESULT_CATEGORIES.map(c=>`<option ${c===current?"selected":""}>${c}</option>`).join("")}</select>`;
+};
+
+function usedInRecipe(sourceId){
+  return state.products.some(p=>p.mode==="recipe"&&(p.components||[]).some(c=>c.itemId===sourceId));
+}
+
+function actualCategoryForInventoryRow(row){
+  if(row.source==="product"){
+    const p=state.products.find(x=>x.id===row.sourceId);
+    if(!p)return "Iné";
+    // Čokoľvek, čo sa používa ako ingrediencia miešaného nápoja, dávame celé do Drinky.
+    if(usedInRecipe(p.id))return "Drinky";
+    return normalizeProductCategory(p.category);
+  }
+
+  if(row.source==="item"){
+    const i=state.items.find(x=>x.id===row.sourceId);
+    if(!i)return "Iné";
+    // Poháre, slamky a ostatný spotrebný materiál nechceme miešať s nápojmi.
+    if(i.kind==="Spotrebný materiál")return "Iné";
+    // Surovina, ktorá vstupuje do receptúry, patrí do Drinky.
+    if(usedInRecipe(i.id))return "Drinky";
+    return "Iné";
+  }
+
+  // Manuálne inventúrne položky nemajú produktovú kategóriu.
+  return "Iné";
+}
+
+function actualCategorySummary(){
+  const groups=Object.fromEntries(RESULT_CATEGORIES.map(category=>[category,{category,cost:0,rows:0,packages:0,names:[]}]))
+  inventoryRows().forEach(row=>{
+    const c=invCalc(row);
+    if(c.realCost<=0)return;
+    const category=actualCategoryForInventoryRow(row);
+    const g=groups[category]||groups["Iné"];
+    g.cost+=c.realCost;
+    g.rows+=1;
+    g.packages+=c.actual;
+    g.names.push(row.name);
   });
-  return Object.values(groups)
-    .map(g=>({...g,share:totalRevenue>0?g.revenue/totalRevenue*100:0}))
-    .sort((a,b)=>b.revenue-a.revenue||a.category.localeCompare(b.category,"sk"));
+  const total=Object.values(groups).reduce((s,g)=>s+g.cost,0);
+  return RESULT_CATEGORIES.map(category=>({...groups[category],share:total>0?groups[category].cost/total*100:0,total}));
 }
 
 function renderCategorySummary(){
   const host=document.getElementById("categorySummary");
   if(!host)return;
-  const rows=categorySummary();
-  if(!rows.length){
-    host.innerHTML='<div class="empty">Zatiaľ nie sú produkty na kategorizáciu.</div>';
-    return;
-  }
-  host.innerHTML=`<div class="tablewrap" style="max-height:none;margin-top:0"><table style="min-width:850px">
-    <thead><tr><th>Kategória</th><th>Produktov</th><th>Plán predaja ks</th><th>Plánovaná tržba</th><th>Kalkulačný náklad</th><th>Plánovaný zisk z predaja</th><th>Podiel na tržbe</th></tr></thead>
+  const rows=actualCategorySummary();
+  const total=rows.reduce((s,g)=>s+g.cost,0);
+
+  host.innerHTML=`<div class="tablewrap" style="max-height:none;margin-top:0"><table style="min-width:720px">
+    <thead><tr><th>Kategória</th><th>Reálny náklad</th><th>Podiel na náklade tovaru</th><th>Položky</th></tr></thead>
     <tbody>${rows.map(g=>`<tr>
       <td><strong>${esc(g.category)}</strong></td>
-      <td class="calc">${num.format(g.products)}</td>
-      <td class="calc">${num.format(g.qty)}</td>
-      <td class="calc">${eur.format(g.revenue)}</td>
       <td class="calc">${eur.format(g.cost)}</td>
-      <td class="calc ${g.profit>=0?"good":"bad"}">${eur.format(g.profit)}</td>
       <td class="calc">${num.format(g.share)} %</td>
-    </tr>`).join("")}</tbody>
+      <td class="mini">${g.names.length?esc([...new Set(g.names)].join(", ")):"—"}</td>
+    </tr>`).join("")}
+    <tr class="total-line"><td><strong>Spolu</strong></td><td class="calc"><strong>${eur.format(total)}</strong></td><td class="calc"><strong>${total>0?"100 %":"0 %"}</strong></td><td></td></tr>
+    </tbody>
   </table></div>`;
 }
 
-const _renderShopsV16=renderShops;
+function updateCategoryPanelLabels(){
+  const panel=document.querySelector(".category-panel");
+  if(!panel)return;
+  const h2=panel.querySelector("h2");
+  const note=panel.querySelector(".category-note");
+  if(h2)h2.textContent="Skutočný náklad podľa kategórií";
+  if(note)note.textContent="Počíta sa automaticky zo skutočne minutých / otvorených balení v inventúre. Produkty a suroviny použité v receptúrach sa zaradia do Drinky; spotrebný materiál ide do Iné.";
+}
+
+const _renderShopsCategories=renderShops;
 renderShops=function(){
-  _renderShopsV16();
+  _renderShopsCategories();
+  updateCategoryPanelLabels();
   renderCategorySummary();
 };
 
+// Ak sa zmení inventúra alebo kategória produktu, prehľad sa okamžite prepočíta.
+document.addEventListener("input",e=>{
+  const scope=e.target?.dataset?.scope;
+  const fieldName=e.target?.dataset?.field;
+  if(scope==="inventory"||scope==="manual"||(scope==="product"&&fieldName==="category"))renderCategorySummary();
+});
+document.addEventListener("change",e=>{
+  const scope=e.target?.dataset?.scope;
+  const fieldName=e.target?.dataset?.field;
+  if(scope==="inventory"||scope==="manual"||(scope==="product"&&fieldName==="category"))renderCategorySummary();
+});
+
+// Preveď staré názvy kategórií bez mazania produktov.
+state.products.forEach(p=>p.category=normalizeProductCategory(p.category));
+save();
+updateCategoryPanelLabels();
+renderProducts();
 renderCategorySummary();
