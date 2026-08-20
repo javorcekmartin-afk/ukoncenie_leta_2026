@@ -1,7 +1,7 @@
-// v23 – manuálna obnova lokálnych dát + načítanie aktuálnej produktovej tabuľky.
+// v30 – manuálna obnova lokálnych dát. NENAČÍTAVA žiadne aplikačné skripty.
 (function(){
   const PREFIX='kostoliste_stanok_';
-  function escHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[m]));}
+  function escHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
   function snapshots(){
     const out=[];
     for(let i=0;i<localStorage.length;i++){
@@ -42,9 +42,6 @@
     const actions=document.querySelector('.top .actions');
     if(actions&&!document.getElementById('openRecovery')){
       const btn=document.createElement('button');btn.id='openRecovery';btn.textContent='Obnova dát';btn.onclick=showRecovery;actions.prepend(btn);
-    }
-    if(!document.getElementById('v23ProductsScript')){
-      const s=document.createElement('script');s.id='v23ProductsScript';s.src='v22_products.js?v=23';document.body.appendChild(s);
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
