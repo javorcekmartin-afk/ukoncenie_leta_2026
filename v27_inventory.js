@@ -1,8 +1,55 @@
-// v27 – inventúra bez duplicitného zadávania údajov.
-// Produkty: skutočné balenia + cena sa berú zo záložky 1.
-// Suroviny/materiál: cena sa berie zo záložky 2, v inventúre sa zadáva len skutočne minuté množstvo.
+// v28 – inventúra prepojená so skutočným predajom a receptami.
+// Produkty: skutočné balenia + cena zo záložky 1.
+// Suroviny/materiál: skutočná spotreba sa automaticky vypočíta z receptov a zaokrúhli na celé balenia; cena zo záložky 2.
 (function(){
-  const _baseInvCalcV27=invCalc;
+  const _baseInvCalcV28=invCalc;
+  const _baseSourceInventoryRowsV28=sourceInventoryRows;
+
+  function actualPortionsForProduct(p){
+    if(typeof window.productActualPackageStats==='function')return n(window.productActualPackageStats(p).portions);
+    const calc=productCalc(p);
+    const packs=n(p.actualSoldPackages);
+    const servings=p.mode==='simple'?n(calc.servingsPerPackage):1;
+    return packs*servings;
+  }
+
+  // Skutočná spotreba konkrétnej položky zo záložky 2 naprieč všetkými receptami/doplnkami.
+  function actualItemDemand(itemId){
+    let total=0;
+    state.products.forEach(p=>{
+      const portions=actualPortionsForProduct(p);
+      if(portions<=0)return;
+      (p.components||[]).forEach(c=>{
+        if(c.itemId===itemId)total+=n(c.amount)*portions;
+      });
+    });
+    return total;
+  }
+  window.actualItemDemand=actualItemDemand;
+
+  function actualItemPackages(i){
+    const demand=actualItemDemand(i.id);
+    return n(i.packageAmount)>0&&demand>0?Math.ceil((demand-1e-9)/n(i.packageAmount)):0;
+  }
+  window.actualItemPackages=actualItemPackages;
+
+  // Položku zo záložky 2 zobraz aj vtedy, ak nemala plán, ale reálne sa cez recept spotrebovala.
+  sourceInventoryRows=function(){
+    const rows=[];
+    state.products.forEach(p=>{
+      if(p.mode==='simple'&&n(p.packageAmount)>0&&n(p.saleAmount)>0){
+        const c=productCalc(p);
+        rows.push({key:'product:'+p.id,source:'product',sourceId:p.id,name:p.name,supplier:p.supplier||'Bez obchodu',packageLabel:`${num.format(n(p.packageAmount))} ${p.unit||'L'}`,packagePrice:n(p.packagePrice),minimum:c.suggestedPackages,planned:c.plannedPackages,manual:false});
+      }
+    });
+    state.items.forEach(i=>{
+      const need=itemDemand(i.id),actualNeed=actualItemDemand(i.id);
+      if(need>0||actualNeed>0){
+        rows.push({key:'item:'+i.id,source:'item',sourceId:i.id,name:i.name,supplier:i.supplier||'Bez obchodu',packageLabel:`${num.format(n(i.packageAmount))} ${i.unit||'L'}`,packagePrice:n(i.packagePrice),minimum:itemSuggestedPackages(i),planned:itemPlannedPackages(i),manual:false});
+      }
+    });
+    return rows;
+  };
 
   invCalc=function(row){
     // Zdrojové produkty: skutočne predané balenia aj cena sú už v záložke 1.
@@ -13,16 +60,15 @@
       return {actual,unitPrice,realCost:actual*unitPrice,planPurchase:n(row.planned)*n(row.packagePrice)};
     }
 
-    // Suroviny/materiál: cenu používame priamo zo záložky 2.
+    // Suroviny/materiál: skutočné balenia sa odvodia zo skutočného predaja produktov a receptov.
     if(row.source==='item'){
-      const v=invState(row);
-      const actual=String(v.actualPackages??'').trim()===''?0:n(v.actualPackages);
       const i=state.items.find(x=>x.id===row.sourceId);
+      const actual=i?actualItemPackages(i):0;
       const unitPrice=i?n(i.packagePrice):n(row.packagePrice);
       return {actual,unitPrice,realCost:actual*unitPrice,planPurchase:n(row.planned)*n(row.packagePrice)};
     }
 
-    return _baseInvCalcV27(row);
+    return _baseInvCalcV28(row);
   };
 
   renderInventory=function(){
@@ -42,7 +88,8 @@
         priceCell=`<div class="linked-value"><strong>${eur.format(c.unitPrice)}</strong><div class="mini">zo záložky 1</div></div>`;
         noteCell=field('inventory',r.key,'note',v.note||'');
       }else if(r.source==='item'){
-        actualCell=field('inventory',r.key,'actualPackages',v.actualPackages??'','num');
+        const i=state.items.find(x=>x.id===r.sourceId),demand=i?actualItemDemand(i.id):0;
+        actualCell=`<div class="linked-value"><strong>${num.format(c.actual)}</strong><div class="mini">spotreba ${num.format(demand)} ${esc(i?.unit||'')} → celé balenia</div></div>`;
         priceCell=`<div class="linked-value"><strong>${eur.format(c.unitPrice)}</strong><div class="mini">zo záložky 2</div></div>`;
         noteCell=field('inventory',r.key,'note',v.note||'');
       }else{
@@ -65,20 +112,25 @@
   style.textContent=`#tab-inventory .linked-value{padding:6px 4px;white-space:nowrap}#tab-inventory .linked-value strong{display:block}`;
   document.head.appendChild(style);
 
-  // Pri zmene skutočne predaných balení alebo ceny produktu sa inventúra okamžite prepočíta.
+  // Každá zmena skutočného predaja alebo receptu musí okamžite prepočítať inventúru.
+  function refreshActualInventory(){
+    renderInventory();renderShops();updateSummary();
+    if(typeof renderCategorySummary==='function')renderCategorySummary();
+    if(typeof renderActualProfitSummary==='function')renderActualProfitSummary();
+  }
   document.addEventListener('input',e=>{
     const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;
-    if(s==='product'&&(f==='actualSoldPackages'||f==='packagePrice')){renderInventory();renderShops();updateSummary();if(typeof renderCategorySummary==='function')renderCategorySummary();}
-    if(s==='item'&&f==='packagePrice'){renderInventory();renderShops();updateSummary();if(typeof renderCategorySummary==='function')renderCategorySummary();}
+    if(s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'||f==='saleAmount'||f==='packageAmount'))refreshActualInventory();
+    if(s==='item'&&(f==='packagePrice'||f==='packageAmount'))refreshActualInventory();
+    if(e.target?.dataset?.rfield==='amount')refreshActualInventory();
   });
   document.addEventListener('change',e=>{
     const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;
-    if((s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'))||(s==='item'&&f==='packagePrice')){renderInventory();renderShops();updateSummary();if(typeof renderCategorySummary==='function')renderCategorySummary();}
+    if((s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'||f==='saleAmount'||f==='packageAmount'||f==='unit'))||(s==='item'&&(f==='packagePrice'||f==='packageAmount'||f==='unit'))||e.target?.dataset?.rfield)refreshActualInventory();
   });
 
-  // Nadpisy vysvetlia, že väčšina údajov sa už neprepisuje ručne.
   const section=document.querySelector('#tab-inventory .sectionhead p');
-  if(section)section.textContent='Produkty preberajú skutočne predané balenia aj cenu zo záložky 1. Pri surovinách a materiáloch zadáš len skutočne minuté balenia; cena sa preberie zo záložky 2.';
+  if(section)section.textContent='Produkty preberajú skutočne predané balenia a cenu zo záložky 1. Suroviny a materiály sa automaticky vypočítajú zo skutočného predaja a receptov, zaokrúhlia nahor na celé balenia a cenu preberú zo záložky 2.';
 
   renderInventory();renderShops();updateSummary();if(typeof renderCategorySummary==='function')renderCategorySummary();
 })();
