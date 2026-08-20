@@ -1,73 +1,53 @@
 // v28 – inventúra prepojená so skutočným predajom a receptami.
-// Produkty: skutočné balenia + cena zo záložky 1.
-// Suroviny/materiál: skutočná spotreba sa automaticky vypočíta z receptov a zaokrúhli na celé balenia; cena zo záložky 2.
+// Predaj môže byť zadaný aj ako časť balenia (napr. 1,54 suda = 154 pív), ale inventúrny náklad sa účtuje na celé otvorené balenia.
 (function(){
   const _baseInvCalcV28=invCalc;
-  const _baseSourceInventoryRowsV28=sourceInventoryRows;
 
   function actualPortionsForProduct(p){
     if(typeof window.productActualPackageStats==='function')return n(window.productActualPackageStats(p).portions);
-    const calc=productCalc(p);
-    const packs=n(p.actualSoldPackages);
-    const servings=p.mode==='simple'?n(calc.servingsPerPackage):1;
+    const calc=productCalc(p),packs=n(p.actualSoldPackages),servings=p.mode==='simple'?n(calc.servingsPerPackage):1;
     return packs*servings;
   }
 
-  // Skutočná spotreba konkrétnej položky zo záložky 2 naprieč všetkými receptami/doplnkami.
   function actualItemDemand(itemId){
     let total=0;
     state.products.forEach(p=>{
-      const portions=actualPortionsForProduct(p);
-      if(portions<=0)return;
-      (p.components||[]).forEach(c=>{
-        if(c.itemId===itemId)total+=n(c.amount)*portions;
-      });
+      const portions=actualPortionsForProduct(p);if(portions<=0)return;
+      (p.components||[]).forEach(c=>{if(c.itemId===itemId)total+=n(c.amount)*portions});
     });
     return total;
   }
   window.actualItemDemand=actualItemDemand;
 
-  function actualItemPackages(i){
-    const demand=actualItemDemand(i.id);
-    return n(i.packageAmount)>0&&demand>0?Math.ceil((demand-1e-9)/n(i.packageAmount)):0;
-  }
+  function wholePackages(amount){return amount>0?Math.ceil(amount-1e-9):0}
+  function actualItemPackages(i){const demand=actualItemDemand(i.id);return n(i.packageAmount)>0&&demand>0?wholePackages(demand/n(i.packageAmount)):0}
   window.actualItemPackages=actualItemPackages;
 
-  // Položku zo záložky 2 zobraz aj vtedy, ak nemala plán, ale reálne sa cez recept spotrebovala.
+  // Zobraz aj položky, ktoré nemali plán, ale vznikla na ne skutočná spotreba.
   sourceInventoryRows=function(){
     const rows=[];
     state.products.forEach(p=>{
-      if(p.mode==='simple'&&n(p.packageAmount)>0&&n(p.saleAmount)>0){
-        const c=productCalc(p);
-        rows.push({key:'product:'+p.id,source:'product',sourceId:p.id,name:p.name,supplier:p.supplier||'Bez obchodu',packageLabel:`${num.format(n(p.packageAmount))} ${p.unit||'L'}`,packagePrice:n(p.packagePrice),minimum:c.suggestedPackages,planned:c.plannedPackages,manual:false});
-      }
+      if(p.mode==='simple'&&n(p.packageAmount)>0&&n(p.saleAmount)>0){const c=productCalc(p);rows.push({key:'product:'+p.id,source:'product',sourceId:p.id,name:p.name,supplier:p.supplier||'Bez obchodu',packageLabel:`${num.format(n(p.packageAmount))} ${p.unit||'L'}`,packagePrice:n(p.packagePrice),minimum:c.suggestedPackages,planned:c.plannedPackages,manual:false})}
     });
     state.items.forEach(i=>{
       const need=itemDemand(i.id),actualNeed=actualItemDemand(i.id);
-      if(need>0||actualNeed>0){
-        rows.push({key:'item:'+i.id,source:'item',sourceId:i.id,name:i.name,supplier:i.supplier||'Bez obchodu',packageLabel:`${num.format(n(i.packageAmount))} ${i.unit||'L'}`,packagePrice:n(i.packagePrice),minimum:itemSuggestedPackages(i),planned:itemPlannedPackages(i),manual:false});
-      }
+      if(need>0||actualNeed>0)rows.push({key:'item:'+i.id,source:'item',sourceId:i.id,name:i.name,supplier:i.supplier||'Bez obchodu',packageLabel:`${num.format(n(i.packageAmount))} ${i.unit||'L'}`,packagePrice:n(i.packagePrice),minimum:itemSuggestedPackages(i),planned:itemPlannedPackages(i),manual:false});
     });
     return rows;
   };
 
   invCalc=function(row){
-    // Zdrojové produkty: skutočne predané balenia aj cena sú už v záložke 1.
     if(row.source==='product'){
       const p=state.products.find(x=>x.id===row.sourceId);
-      const actual=p&&String(p.actualSoldPackages??'').trim()!==''?n(p.actualSoldPackages):0;
+      const sold=p&&String(p.actualSoldPackages??'').trim()!==''?Math.max(0,n(p.actualSoldPackages)):0;
+      const actual=wholePackages(sold);
       const unitPrice=p?n(p.packagePrice):n(row.packagePrice);
-      return {actual,unitPrice,realCost:actual*unitPrice,planPurchase:n(row.planned)*n(row.packagePrice)};
+      return {actual,sold,unitPrice,realCost:actual*unitPrice,planPurchase:n(row.planned)*n(row.packagePrice)};
     }
-
-    // Suroviny/materiál: skutočné balenia sa odvodia zo skutočného predaja produktov a receptov.
     if(row.source==='item'){
-      const i=state.items.find(x=>x.id===row.sourceId);
-      const actual=i?actualItemPackages(i):0;
-      const unitPrice=i?n(i.packagePrice):n(row.packagePrice);
+      const i=state.items.find(x=>x.id===row.sourceId),actual=i?actualItemPackages(i):0,unitPrice=i?n(i.packagePrice):n(row.packagePrice);
       return {actual,unitPrice,realCost:actual*unitPrice,planPurchase:n(row.planned)*n(row.packagePrice)};
     }
-
     return _baseInvCalcV28(row);
   };
 
@@ -82,9 +62,8 @@
       let actualCell='',priceCell='',noteCell='',actionCell='';
 
       if(r.source==='product'){
-        const p=state.products.find(x=>x.id===r.sourceId);
-        const actual=p&&String(p.actualSoldPackages??'').trim()!==''?n(p.actualSoldPackages):0;
-        actualCell=`<div class="linked-value"><strong>${num.format(actual)}</strong><div class="mini">zo záložky 1</div></div>`;
+        const p=state.products.find(x=>x.id===r.sourceId),sold=p?Math.max(0,n(p.actualSoldPackages)):0;
+        actualCell=`<div class="linked-value"><strong>${num.format(c.actual)}</strong><div class="mini">predaj ${num.format(sold)} bal. → ${num.format(c.actual)} otvorené bal.</div></div>`;
         priceCell=`<div class="linked-value"><strong>${eur.format(c.unitPrice)}</strong><div class="mini">zo záložky 1</div></div>`;
         noteCell=field('inventory',r.key,'note',v.note||'');
       }else if(r.source==='item'){
@@ -99,38 +78,18 @@
         actionCell=`<button class="small danger" data-action="deleteManualInventory" data-id="${r.sourceId}">×</button>`;
       }
 
-      return `<tr>
-        <td>${nameCell}</td><td>${supplierCell}</td><td>${packageCell}</td>
-        <td class="calc">${r.minimum||'—'}</td><td>${planCell}</td><td class="calc">${eur.format(c.planPurchase)}</td>
-        <td>${actualCell}</td><td>${priceCell}</td><td class="calc">${eur.format(c.realCost)}</td><td>${noteCell}</td><td>${actionCell}</td>
-      </tr>`;
+      return `<tr><td>${nameCell}</td><td>${supplierCell}</td><td>${packageCell}</td><td class="calc">${r.minimum||'—'}</td><td>${planCell}</td><td class="calc">${eur.format(c.planPurchase)}</td><td>${actualCell}</td><td>${priceCell}</td><td class="calc">${eur.format(c.realCost)}</td><td>${noteCell}</td><td>${actionCell}</td></tr>`;
     }).join('');
     inventoryEmpty.hidden=rows.length>0;
   };
 
-  const style=document.createElement('style');
-  style.textContent=`#tab-inventory .linked-value{padding:6px 4px;white-space:nowrap}#tab-inventory .linked-value strong{display:block}`;
-  document.head.appendChild(style);
+  const style=document.createElement('style');style.textContent=`#tab-inventory .linked-value{padding:6px 4px;white-space:nowrap}#tab-inventory .linked-value strong{display:block}`;document.head.appendChild(style);
 
-  // Každá zmena skutočného predaja alebo receptu musí okamžite prepočítať inventúru.
-  function refreshActualInventory(){
-    renderInventory();renderShops();updateSummary();
-    if(typeof renderCategorySummary==='function')renderCategorySummary();
-    if(typeof renderActualProfitSummary==='function')renderActualProfitSummary();
-  }
-  document.addEventListener('input',e=>{
-    const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;
-    if(s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'||f==='saleAmount'||f==='packageAmount'))refreshActualInventory();
-    if(s==='item'&&(f==='packagePrice'||f==='packageAmount'))refreshActualInventory();
-    if(e.target?.dataset?.rfield==='amount')refreshActualInventory();
-  });
-  document.addEventListener('change',e=>{
-    const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;
-    if((s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'||f==='saleAmount'||f==='packageAmount'||f==='unit'))||(s==='item'&&(f==='packagePrice'||f==='packageAmount'||f==='unit'))||e.target?.dataset?.rfield)refreshActualInventory();
-  });
+  function refreshActualInventory(){renderInventory();renderShops();updateSummary();if(typeof renderCategorySummary==='function')renderCategorySummary();if(typeof renderActualProfitSummary==='function')renderActualProfitSummary()}
+  document.addEventListener('input',e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'||f==='saleAmount'||f==='packageAmount'))refreshActualInventory();if(s==='item'&&(f==='packagePrice'||f==='packageAmount'))refreshActualInventory();if(e.target?.dataset?.rfield==='amount')refreshActualInventory()});
+  document.addEventListener('change',e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if((s==='product'&&(f==='actualSoldPackages'||f==='packagePrice'||f==='saleAmount'||f==='packageAmount'||f==='unit'))||(s==='item'&&(f==='packagePrice'||f==='packageAmount'||f==='unit'))||e.target?.dataset?.rfield)refreshActualInventory()});
 
-  const section=document.querySelector('#tab-inventory .sectionhead p');
-  if(section)section.textContent='Produkty preberajú skutočne predané balenia a cenu zo záložky 1. Suroviny a materiály sa automaticky vypočítajú zo skutočného predaja a receptov, zaokrúhlia nahor na celé balenia a cenu preberú zo záložky 2.';
+  const section=document.querySelector('#tab-inventory .sectionhead p');if(section)section.textContent='Produkty preberajú skutočný predaj zo záložky 1 a inventúra ho zaokrúhli na celé otvorené balenia. Suroviny a materiály sa automaticky vypočítajú zo skutočného predaja a receptov, zaokrúhlia nahor na celé balenia a cenu preberú zo záložky 2.';
 
   renderInventory();renderShops();updateSummary();if(typeof renderCategorySummary==='function')renderCategorySummary();
 })();
