@@ -1,18 +1,8 @@
-// v25 – bezpečné kategórie + manuálna obnova dát + skutočný predaj/zisk + správny plánový zisk.
+// v26 – bezpečné kategórie + manuálna obnova dát + plánový zisk.
 
 const _safeOriginalSave=save;
 save=function(){
-  try{
-    const raw=localStorage.getItem(KEY);
-    if(raw){
-      localStorage.setItem("kostoliste_stanok_backup_"+Date.now(),raw);
-      const backups=[];
-      for(let i=0;i<localStorage.length;i++){
-        const k=localStorage.key(i);if(k&&k.startsWith("kostoliste_stanok_backup_"))backups.push(k);
-      }
-      backups.sort().reverse().slice(10).forEach(k=>localStorage.removeItem(k));
-    }
-  }catch(e){}
+  try{const raw=localStorage.getItem(KEY);if(raw){localStorage.setItem("kostoliste_stanok_backup_"+Date.now(),raw);const backups=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("kostoliste_stanok_backup_"))backups.push(k)}backups.sort().reverse().slice(10).forEach(k=>localStorage.removeItem(k))}}catch(e){}
   _safeOriginalSave();
 };
 
@@ -20,98 +10,26 @@ const RESULT_CATEGORIES=["Pivo","Víno","Nealko","Alko","Drinky","Iné"];
 function normalizeProductCategory(cat){const c=String(cat||"").trim();if(c==="Destilát")return "Alko";if(c==="Mix drink")return "Drinky";if(RESULT_CATEGORIES.includes(c))return c;return "Iné"}
 categorySelect=function(id,val){const current=normalizeProductCategory(val);return `<select data-scope="product" data-id="${id}" data-field="category">${RESULT_CATEGORIES.map(c=>`<option ${c===current?"selected":""}>${c}</option>`).join("")}</select>`};
 function usedInRecipe(sourceId){return state.products.some(p=>p.mode==="recipe"&&(p.components||[]).some(c=>c.itemId===sourceId))}
-function actualCategoryForInventoryRow(row){
-  if(row.source==="product"){const p=state.products.find(x=>x.id===row.sourceId);if(!p)return "Iné";if(usedInRecipe(p.id))return "Drinky";return normalizeProductCategory(p.category)}
-  if(row.source==="item"){const i=state.items.find(x=>x.id===row.sourceId);if(!i)return "Iné";if(i.kind==="Spotrebný materiál")return "Iné";if(usedInRecipe(i.id))return "Drinky";return "Iné"}
-  return "Iné";
-}
-function actualCategorySummary(){
-  const groups=Object.fromEntries(RESULT_CATEGORIES.map(category=>[category,{category,cost:0,names:[]}]))
-  inventoryRows().forEach(row=>{const c=invCalc(row);if(c.realCost<=0)return;const g=groups[actualCategoryForInventoryRow(row)]||groups.Iné;g.cost+=c.realCost;g.names.push(row.name)});
-  const total=Object.values(groups).reduce((s,g)=>s+g.cost,0);
-  return RESULT_CATEGORIES.map(category=>({...groups[category],share:total>0?groups[category].cost/total*100:0,total}));
-}
-function renderCategorySummary(){
-  const host=document.getElementById("categorySummary");if(!host)return;const rows=actualCategorySummary();const total=rows.reduce((s,g)=>s+g.cost,0);
-  host.innerHTML=`<div class="tablewrap" style="max-height:none;margin-top:0"><table style="min-width:720px"><thead><tr><th>Kategória</th><th>Reálny náklad</th><th>Podiel na náklade tovaru</th><th>Položky</th></tr></thead><tbody>${rows.map(g=>`<tr><td><strong>${esc(g.category)}</strong></td><td class="calc">${eur.format(g.cost)}</td><td class="calc">${num.format(g.share)} %</td><td class="mini">${g.names.length?esc([...new Set(g.names)].join(", ")):"—"}</td></tr>`).join("")}<tr class="total-line"><td><strong>Spolu</strong></td><td class="calc"><strong>${eur.format(total)}</strong></td><td class="calc"><strong>${total>0?"100 %":"0 %"}</strong></td><td></td></tr></tbody></table></div>`;
-}
+function actualCategoryForInventoryRow(row){if(row.source==="product"){const p=state.products.find(x=>x.id===row.sourceId);if(!p)return "Iné";if(usedInRecipe(p.id))return "Drinky";return normalizeProductCategory(p.category)}if(row.source==="item"){const i=state.items.find(x=>x.id===row.sourceId);if(!i)return "Iné";if(i.kind==="Spotrebný materiál")return "Iné";if(usedInRecipe(i.id))return "Drinky";return "Iné"}return "Iné"}
+function actualCategorySummary(){const groups=Object.fromEntries(RESULT_CATEGORIES.map(category=>[category,{category,cost:0,names:[]}]))
+  inventoryRows().forEach(row=>{const c=invCalc(row);if(c.realCost<=0)return;const g=groups[actualCategoryForInventoryRow(row)]||groups.Iné;g.cost+=c.realCost;g.names.push(row.name)});const total=Object.values(groups).reduce((s,g)=>s+g.cost,0);return RESULT_CATEGORIES.map(category=>({...groups[category],share:total>0?groups[category].cost/total*100:0,total}))}
+function renderCategorySummary(){const host=document.getElementById("categorySummary");if(!host)return;const rows=actualCategorySummary(),total=rows.reduce((s,g)=>s+g.cost,0);host.innerHTML=`<div class="tablewrap" style="max-height:none;margin-top:0"><table style="min-width:720px"><thead><tr><th>Kategória</th><th>Reálny náklad</th><th>Podiel na náklade tovaru</th><th>Položky</th></tr></thead><tbody>${rows.map(g=>`<tr><td><strong>${esc(g.category)}</strong></td><td class="calc">${eur.format(g.cost)}</td><td class="calc">${num.format(g.share)} %</td><td class="mini">${g.names.length?esc([...new Set(g.names)].join(", ")):"—"}</td></tr>`).join("")}<tr class="total-line"><td><strong>Spolu</strong></td><td class="calc"><strong>${eur.format(total)}</strong></td><td class="calc"><strong>${total>0?"100 %":"0 %"}</strong></td><td></td></tr></tbody></table></div>`}
 function updateCategoryPanelLabels(){const panel=document.querySelector(".category-panel");if(!panel)return;const h2=panel.querySelector("h2"),note=panel.querySelector(".category-note");if(h2)h2.textContent="Skutočný náklad podľa kategórií";if(note)note.textContent="Počíta sa automaticky zo skutočne minutých / otvorených balení v inventúre. Produkty a suroviny použité v receptúrach sa zaradia do Drinky; spotrebný materiál ide do Iné."}
 
+// Do načítania v26 ponechaj spätne kompatibilnú analytiku; v26_products ju následne prepíše balíkovou logikou.
 numericFields.add("actualSoldQty");
 function actualProductStats(p){const qty=n(p.actualSoldQty),calc=productCalc(p),revenue=qty*n(p.salePrice),profit=qty*calc.profit;return {qty,revenue,unitProfit:calc.profit,profit}}
-function addActualColumnsToProducts(){
-  const table=document.querySelector('#tab-products table');if(!table)return;const head=table.querySelector('thead tr');
-  if(head&&!head.querySelector('[data-real-sales-head]')){const q=document.createElement('th');q.dataset.realSalesHead='qty';q.textContent='Skutočne predané ks';const p=document.createElement('th');p.dataset.realSalesHead='profit';p.textContent='Reálny zisk';head.insertBefore(p,head.lastElementChild);head.insertBefore(q,p)}
-  table.querySelectorAll('tbody tr').forEach(tr=>{if(tr.querySelector('[data-real-sales-cell]'))return;const id=tr.querySelector('[data-scope="product"]')?.dataset.id,p=state.products.find(x=>x.id===id);if(!p)return;const st=actualProductStats(p);const q=document.createElement('td');q.dataset.realSalesCell='qty';q.innerHTML=field('product',p.id,'actualSoldQty',p.actualSoldQty??'','num');const z=document.createElement('td');z.dataset.realSalesCell='profit';z.className=`calc ${st.profit>=0?'good':'bad'}`;z.textContent=String(p.actualSoldQty??'').trim()===''?'—':eur.format(st.profit);tr.insertBefore(z,tr.lastElementChild);tr.insertBefore(q,z)})
-}
-function renderActualProfitSummary(){
-  const tab=document.getElementById('tab-shops');if(!tab)return;let panel=document.getElementById('actualProfitPanel');if(!panel){panel=document.createElement('div');panel.id='actualProfitPanel';panel.className='panel box';panel.style.marginTop='12px';const category=document.querySelector('.category-panel');if(category)tab.insertBefore(panel,category);else tab.appendChild(panel)}
-  const filled=state.products.map(p=>({p,...actualProductStats(p)})).filter(r=>String(r.p.actualSoldQty??'').trim()!=='');
-  const totalQty=filled.reduce((s,r)=>s+r.qty,0),totalRevenue=filled.reduce((s,r)=>s+r.revenue,0),totalProfit=filled.reduce((s,r)=>s+r.profit,0);
-  panel.innerHTML=`<h2>Skutočný predaj a zisk podľa produktov</h2><p class="category-note">Reálny zisk produktu = skutočne predané ks × zisk na ks. Tento prehľad nemení finálny finančný výsledok akcie.</p>${filled.length?`<div class="tablewrap" style="max-height:none;margin-top:10px"><table style="min-width:900px"><thead><tr><th>Produkt</th><th>Kategória</th><th>Skutočne predané ks</th><th>Predajná cena</th><th>Zisk / ks</th><th>Skutočná tržba produktu</th><th>Reálny zisk</th></tr></thead><tbody>${filled.map(r=>`<tr><td><strong>${esc(r.p.name)}</strong></td><td>${esc(normalizeProductCategory(r.p.category))}</td><td class="calc">${num.format(r.qty)}</td><td class="calc">${eur.format(n(r.p.salePrice))}</td><td class="calc">${eur.format(r.unitProfit)}</td><td class="calc">${eur.format(r.revenue)}</td><td class="calc ${r.profit>=0?'good':'bad'}"><strong>${eur.format(r.profit)}</strong></td></tr>`).join('')}<tr class="total-line"><td><strong>Spolu</strong></td><td></td><td class="calc"><strong>${num.format(totalQty)}</strong></td><td></td><td></td><td class="calc"><strong>${eur.format(totalRevenue)}</strong></td><td class="calc"><strong>${eur.format(totalProfit)}</strong></td></tr></tbody></table></div>`:`<div class="empty" style="margin-top:10px">Vyplň pri produktoch „Skutočne predané ks“ a zobrazí sa reálny zisk po produktoch.</div>`}`;
-}
+function renderActualProfitSummary(){const tab=document.getElementById('tab-shops');if(!tab)return;let panel=document.getElementById('actualProfitPanel');if(!panel){panel=document.createElement('div');panel.id='actualProfitPanel';panel.className='panel box';panel.style.marginTop='12px';const category=document.querySelector('.category-panel');if(category)tab.insertBefore(panel,category);else tab.appendChild(panel)}panel.innerHTML='<div class="empty">Načítava sa balíkový prehľad predaja…</div>'}
 
-// --- PLÁN: oddeľ kalkulačný náklad predaja od fyzického nákupu celých balení ---
-const _inventoryTotalsBase=totals;
-totals=function(){
-  let planRevenue=0,planCost=0;
-  state.products.forEach(p=>{
-    const qty=n(p.plannedQty),calc=productCalc(p);
-    planRevenue+=n(p.salePrice)*qty;
-    planCost+=calc.cost*qty;
-  });
-  let planPurchase=0,actualPurchase=0;
-  inventoryRows().forEach(r=>{const c=invCalc(r);planPurchase+=c.planPurchase;actualPurchase+=c.realCost});
-  let suppActual=0;state.supplementalCosts.forEach(c=>suppActual+=suppCalc(c).actual);
-  const rev=revenueCalc(),planResult=planRevenue-planCost,totalActualCosts=actualPurchase+suppActual,actualResult=rev.filled?rev.total-totalActualCosts:null;
-  return {planRevenue,planCost,planPurchase,planResult,actualRevenue:rev.total,actualPurchase,suppActual,totalActualCosts,actualResult,revenueFilled:rev.filled,rev};
-};
+// Plán: kalkulačný náklad predaja je oddelený od fyzického nákupu balení.
+totals=function(){let planRevenue=0,planCost=0;state.products.forEach(p=>{const qty=n(p.plannedQty),calc=productCalc(p);planRevenue+=n(p.salePrice)*qty;planCost+=calc.cost*qty});let planPurchase=0,actualPurchase=0;inventoryRows().forEach(r=>{const c=invCalc(r);planPurchase+=c.planPurchase;actualPurchase+=c.realCost});let suppActual=0;state.supplementalCosts.forEach(c=>suppActual+=suppCalc(c).actual);const rev=revenueCalc(),planResult=planRevenue-planCost,totalActualCosts=actualPurchase+suppActual,actualResult=rev.filled?rev.total-totalActualCosts:null;return {planRevenue,planCost,planPurchase,planResult,actualRevenue:rev.total,actualPurchase,suppActual,totalActualCosts,actualResult,revenueFilled:rev.filled,rev}};
+function setupPlanPresentation(){const planCostEl=document.getElementById('planPurchase'),card=planCostEl?.closest('.card');if(card){const label=card.querySelector('.label'),meta=card.querySelector('.meta');if(label)label.textContent='Kalkulačný náklad predaja';if(meta)meta.textContent='náklad na porciu × plán predaja'}const resultEl=document.getElementById('rPlanPurchase'),resultRow=resultEl?.closest('.resultitem');if(resultRow){const span=resultRow.querySelector('span');if(span)span.textContent='Kalkulačný náklad predaja';if(!document.getElementById('rPlanPackagePurchase')){const row=document.createElement('div');row.className='resultitem';row.innerHTML='<span>Plánovaný nákup celých balení</span><strong id="rPlanPackagePurchase">0 €</strong>';resultRow.insertAdjacentElement('afterend',row)}}const resultLabel=document.getElementById('rPlanResult')?.closest('.resultitem')?.querySelector('span');if(resultLabel)resultLabel.textContent='Plánovaný zisk z predaja';const dashResult=document.getElementById('planResult')?.closest('.card');if(dashResult){const l=dashResult.querySelector('.label'),m=dashResult.querySelector('.meta');if(l)l.textContent='Plánovaný zisk';if(m)m.textContent='tržba − kalkulačný náklad'}}
+updateSummary=function(){const t=totals();setMoney('planRevenue',t.planRevenue);setMoney('planPurchase',t.planCost);setMoney('planResult',t.planResult);setMoney('actualRevenue',t.actualRevenue,t.revenueFilled);setMoney('actualPurchase',t.actualPurchase);setMoney('actualSupplemental',t.suppActual);setMoney('totalActualCosts',t.totalActualCosts);setMoney('actualResult',t.actualResult,t.revenueFilled);setMoney('rPlanRevenue',t.planRevenue);setMoney('rPlanPurchase',t.planCost);setMoney('rPlanPackagePurchase',t.planPurchase);setMoney('rPlanResult',t.planResult);setMoney('rCashRevenue',t.rev.cash,String(state.meta.cashRevenue??'').trim()!=='');setMoney('rTerminalRevenue',t.rev.terminal,String(state.meta.terminalRevenue??'').trim()!=='');setMoney('rCashFloat',-t.rev.float,String(state.meta.cashFloat??'').trim()!=='');setMoney('rActualRevenue',t.actualRevenue,t.revenueFilled);setMoney('rActualPurchase',t.actualPurchase);setMoney('rSuppActual',t.suppActual);setMoney('rTotalActualCosts',t.totalActualCosts);setMoney('rActualResult',t.actualResult,t.revenueFilled)};
 
-function setupPlanPresentation(){
-  const planCostEl=document.getElementById('planPurchase');
-  const card=planCostEl?.closest('.card');
-  if(card){const label=card.querySelector('.label'),meta=card.querySelector('.meta');if(label)label.textContent='Kalkulačný náklad predaja';if(meta)meta.textContent='náklad / ks × plán predaja'}
-  const resultEl=document.getElementById('rPlanPurchase');
-  const resultRow=resultEl?.closest('.resultitem');
-  if(resultRow){const span=resultRow.querySelector('span');if(span)span.textContent='Kalkulačný náklad predaja';
-    if(!document.getElementById('rPlanPackagePurchase')){
-      const row=document.createElement('div');row.className='resultitem';row.innerHTML='<span>Plánovaný nákup celých balení</span><strong id="rPlanPackagePurchase">0 €</strong>';resultRow.insertAdjacentElement('afterend',row);
-    }
-  }
-  const resultLabel=document.getElementById('rPlanResult')?.closest('.resultitem')?.querySelector('span');if(resultLabel)resultLabel.textContent='Plánovaný zisk z predaja';
-  const dashResult=document.getElementById('planResult')?.closest('.card');if(dashResult){const l=dashResult.querySelector('.label'),m=dashResult.querySelector('.meta');if(l)l.textContent='Plánovaný zisk';if(m)m.textContent='tržba − kalkulačný náklad'}
-}
-
-const _updateSummaryV25=updateSummary;
-updateSummary=function(){
-  const t=totals();
-  setMoney('planRevenue',t.planRevenue);
-  setMoney('planPurchase',t.planCost);
-  setMoney('planResult',t.planResult);
-  setMoney('actualRevenue',t.actualRevenue,t.revenueFilled);
-  setMoney('actualPurchase',t.actualPurchase);
-  setMoney('actualSupplemental',t.suppActual);
-  setMoney('totalActualCosts',t.totalActualCosts);
-  setMoney('actualResult',t.actualResult,t.revenueFilled);
-  setMoney('rPlanRevenue',t.planRevenue);
-  setMoney('rPlanPurchase',t.planCost);
-  setMoney('rPlanPackagePurchase',t.planPurchase);
-  setMoney('rPlanResult',t.planResult);
-  setMoney('rCashRevenue',t.rev.cash,String(state.meta.cashRevenue??'').trim()!=='');
-  setMoney('rTerminalRevenue',t.rev.terminal,String(state.meta.terminalRevenue??'').trim()!=='');
-  setMoney('rCashFloat',-t.rev.float,String(state.meta.cashFloat??'').trim()!=='');
-  setMoney('rActualRevenue',t.actualRevenue,t.revenueFilled);
-  setMoney('rActualPurchase',t.actualPurchase);
-  setMoney('rSuppActual',t.suppActual);
-  setMoney('rTotalActualCosts',t.totalActualCosts);
-  setMoney('rActualResult',t.actualResult,t.revenueFilled);
-};
-
-const _renderProductsV21=renderProducts;renderProducts=function(){_renderProductsV21();addActualColumnsToProducts()};
 const _renderShopsCategories=renderShops;renderShops=function(){_renderShopsCategories();updateCategoryPanelLabels();renderCategorySummary();renderActualProfitSummary();setupPlanPresentation();updateSummary()};
-document.addEventListener("input",e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==="inventory"||s==="manual"||(s==="product"&&f==="category"))renderCategorySummary();if(s==="product"&&f==="actualSoldQty"){const tr=e.target.closest('tr'),p=state.products.find(x=>x.id===e.target.dataset.id),cell=tr?.querySelector('[data-real-sales-cell="profit"]');if(p&&cell){const st=actualProductStats(p);cell.textContent=eur.format(st.profit);cell.className=`calc ${st.profit>=0?'good':'bad'}`}renderActualProfitSummary()}});
-document.addEventListener("change",e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==="inventory"||s==="manual"||(s==="product"&&f==="category"))renderCategorySummary();if(s==="product"&&f==="actualSoldQty")renderActualProfitSummary()});
+document.addEventListener("input",e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==="inventory"||s==="manual"||(s==="product"&&f==="category"))renderCategorySummary()});
+document.addEventListener("change",e=>{const s=e.target?.dataset?.scope,f=e.target?.dataset?.field;if(s==="inventory"||s==="manual"||(s==="product"&&f==="category"))renderCategorySummary()});
 
-setupPlanPresentation();updateCategoryPanelLabels();renderProducts();renderCategorySummary();renderActualProfitSummary();updateSummary();
-(function loadRecoveryTool(){if(document.getElementById('manualRecoveryScript'))return;const s=document.createElement('script');s.id='manualRecoveryScript';s.src='recovery.js?v=25';document.body.appendChild(s)})();
-(function loadV25Products(){if(document.getElementById('v22ProductScript'))return;const s=document.createElement('script');s.id='v22ProductScript';s.src='v22_products.js?v=25';s.onload=()=>{document.title='Stánok v25';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v25';setupPlanPresentation();updateSummary()};document.body.appendChild(s)})();
+setupPlanPresentation();updateCategoryPanelLabels();renderCategorySummary();updateSummary();
+(function loadRecoveryTool(){if(document.getElementById('manualRecoveryScript'))return;const s=document.createElement('script');s.id='manualRecoveryScript';s.src='recovery.js?v=26';document.body.appendChild(s)})();
+(function loadV26Products(){if(document.getElementById('v22ProductScript'))return;const s=document.createElement('script');s.id='v22ProductScript';s.src='v22_products.js?v=26';s.onload=()=>{document.title='Stánok v26';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v26';setupPlanPresentation();renderAll();renderActualProfitSummary();updateSummary()};document.body.appendChild(s)})();
