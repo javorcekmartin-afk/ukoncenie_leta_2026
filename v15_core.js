@@ -9,6 +9,27 @@ const inputNum=v=>String(v??"").replace(".",",");
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const roundUp=(v,step=.1)=>step>0?Math.ceil((v-1e-9)/step)*step:v;
 
+function normalizeSupplementalCost(c){
+  c=c&&typeof c==='object'?c:{};
+  let qty=c.qty??1,unitPrice=c.unitPrice??0;
+  const oldPlan=n(c.planAmount??c.amount);
+  if(n(unitPrice)===0&&oldPlan>0){qty=1;unitPrice=oldPlan}
+  const plannedQty=c.plannedQty===undefined?qty:c.plannedQty;
+  const plannedUnitPrice=c.plannedUnitPrice===undefined?unitPrice:c.plannedUnitPrice;
+  return {
+    ...c,
+    id:c.id||uid(),
+    name:c.name||"Náklad",
+    category:c.category||"Ostatné",
+    supplier:c.supplier||"",
+    plannedQty,
+    plannedUnitPrice,
+    qty,
+    unitPrice,
+    note:c.note||""
+  };
+}
+
 function baseState(){
   const cup=uid(),gin=uid(),tonic=uid();
   return {
@@ -25,9 +46,9 @@ function baseState(){
     ],
     inventory:{},manualInventory:[],
     supplementalCosts:[
-      {id:uid(),name:"Prenájom miesta",category:"Prenájom",qty:1,unitPrice:0,note:""},
-      {id:uid(),name:"Ľad",category:"Spotrebný materiál",qty:1,unitPrice:0,note:""},
-      {id:uid(),name:"Výčap / technika",category:"Technika",qty:1,unitPrice:0,note:""}
+      {id:uid(),name:"Prenájom miesta",category:"Prenájom",supplier:"",plannedQty:1,plannedUnitPrice:0,qty:1,unitPrice:0,note:""},
+      {id:uid(),name:"Ľad",category:"Spotrebný materiál",supplier:"",plannedQty:1,plannedUnitPrice:0,qty:1,unitPrice:0,note:""},
+      {id:uid(),name:"Výčap / technika",category:"Technika",supplier:"",plannedQty:1,plannedUnitPrice:0,qty:1,unitPrice:0,note:""}
     ]
   };
 }
@@ -39,16 +60,16 @@ function migrateOld(old){
   else if(Array.isArray(old.ingredients))s.items=old.ingredients.map(i=>({id:i.id||uid(),name:i.name||"Položka",kind:i.category==="Spotrebný materiál"?"Spotrebný materiál":"Surovina",unit:i.unit||"L",packageAmount:n(i.packageSize)||1,packagePrice:n(i.packagePrice),plannedPackages:0,supplier:i.supplier||"",note:i.note||""}));
   s.products=(old.products||[]).map(p=>{const saleAmount=n(p.saleAmount??p.unitLiters)||.5,packageAmount=n(p.packageAmount??p.packageLiters)||1,suggested=packageAmount>0&&saleAmount>0?Math.ceil(n(p.plannedQty??p.estimatedUnits)*saleAmount/packageAmount):0;return {id:p.id||uid(),name:p.name||"Produkt",category:p.category||"Iné",mode:p.mode||"simple",supplier:p.supplier||"",unit:p.unit||"L",saleAmount,packageAmount,packagePrice:n(p.packagePrice),salePrice:n(p.salePrice),plannedQty:n(p.plannedQty??p.estimatedUnits),plannedPackages:n(p.plannedPackages)||suggested,components:Array.isArray(p.components)?p.components:(Array.isArray(p.recipe)?p.recipe.map(r=>({itemId:r.ingredientId,amount:n(r.amount)})):[])}});
   const oldInv=old.inventory&&typeof old.inventory==="object"?old.inventory:{};
-  Object.entries(oldInv).forEach(([key,v])=>{const actual=String(v.usedPackages??"").trim()!==""?v.usedPackages:(String(v.actualPackages??"").trim()!==""?v.actualPackages:"");s.inventory[key]={actualPackages:actual,actualUnitPrice:v.actualUnitPrice??"",supplierOverride:v.supplierOverride??"",note:v.note??""}});
+  Object.entries(oldInv).forEach(([key,v])=>{const actual=String(v.usedPackages??"").trim()!==""?v.usedPackages:(String(v.actualPackages??"").trim()!==""?v.actualPackages:"");s.inventory[key]={...v,actualPackages:actual,actualUnitPrice:v.actualUnitPrice??"",supplierOverride:v.supplierOverride??"",note:v.note??""}});
   if(Array.isArray(old.manualInventory))s.manualInventory=old.manualInventory.map(x=>({id:x.id||uid(),name:x.name||"Manuálna položka",supplier:x.supplier||"",packageLabel:x.packageLabel||"1 balenie",packagePrice:n(x.packagePrice),plannedPackages:n(x.plannedPackages),actualPackages:String(x.usedPackages??"").trim()!==""?x.usedPackages:(x.actualPackages??""),actualUnitPrice:x.actualUnitPrice??"",note:x.note||""}));
-  s.supplementalCosts=(old.supplementalCosts||old.fixedCosts||[]).map(c=>{let qty=n(c.qty||1),unitPrice=n(c.unitPrice??c.amount),oldPlan=n(c.planAmount??c.amount);if(unitPrice===0&&oldPlan>0){qty=1;unitPrice=oldPlan}return {id:c.id||uid(),name:c.name||"Náklad",category:c.category||"Ostatné",qty,unitPrice,note:c.note||""}});
+  s.supplementalCosts=(old.supplementalCosts||old.fixedCosts||[]).map(normalizeSupplementalCost);
   return s;
 }
 function normalize(s){
   if(!s||typeof s!=="object")return baseState();
   s.meta={eventName:"Ukončenie leta 2026",eventDate:"",eventPlace:"Kostolište",targetMarkup:200,cashRevenue:"",terminalRevenue:"",cashFloat:"",...(s.meta||{})};
   s.products=Array.isArray(s.products)?s.products:[];s.items=Array.isArray(s.items)?s.items:[];s.inventory=s.inventory&&typeof s.inventory==="object"?s.inventory:{};s.manualInventory=Array.isArray(s.manualInventory)?s.manualInventory:[];s.supplementalCosts=Array.isArray(s.supplementalCosts)?s.supplementalCosts:[];
-  s.supplementalCosts=s.supplementalCosts.map(c=>{let qty=n(c.qty||1),unitPrice=n(c.unitPrice),oldPlan=n(c.planAmount);if(unitPrice===0&&oldPlan>0){qty=1;unitPrice=oldPlan}return {id:c.id||uid(),name:c.name||"Náklad",category:c.category||"Ostatné",qty,unitPrice,note:c.note||""}});
+  s.supplementalCosts=s.supplementalCosts.map(normalizeSupplementalCost);
   s.products=s.products.map(p=>({...p,supplier:p.supplier||""}));s.items=s.items.map(i=>({...i,supplier:i.supplier||"",plannedPackages:n(i.plannedPackages)}));s.version=15;return s;
 }
 function load(){try{const raw=localStorage.getItem(KEY);if(raw)return normalize(JSON.parse(raw));for(const k of OLD_KEYS){const old=localStorage.getItem(k);if(old){const m=normalize(migrateOld(JSON.parse(old)));localStorage.setItem(KEY,JSON.stringify(m));return m}}}catch(e){}return baseState()}
