@@ -1,21 +1,30 @@
-// v44 – bootstrap cloudu + všetky predchádzajúce vrstvy + produktový zisk/sumáre + vrátené balenia v inventúre.
+// v45 – bootstrap cloudu + všetky predchádzajúce vrstvy + manuálna skutočná spotreba surovín a materiálu.
 (function(){
   if(!document.getElementById('cloudBootstrapScript')){
     const s=document.createElement('script');
     s.id='cloudBootstrapScript';
-    s.src='cloud_bootstrap.js?v=44';
+    s.src='cloud_bootstrap.js?v=45';
     document.body.appendChild(s);
   }
 
-  function loadV44(){
+  function loadV45(){
     if(typeof window.productActualPackageStats!=='function'||typeof window.actualItemDemand!=='function')return false;
 
+    function loadManualItemActual(){
+      if(document.getElementById('v45ManualItemActualScript'))return;
+      const x=document.createElement('script');
+      x.id='v45ManualItemActualScript';
+      x.src='v45_manual_item_actual.js?v=45';
+      x.onload=()=>{document.title='Stánok v45';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v45';renderAll()};
+      document.body.appendChild(x);
+    }
+
     function loadProfitInventory(){
-      if(document.getElementById('v44ProfitInventoryScript'))return;
+      if(document.getElementById('v44ProfitInventoryScript')){loadManualItemActual();return;}
       const x=document.createElement('script');
       x.id='v44ProfitInventoryScript';
-      x.src='v44_profit_inventory_summary.js?v=44';
-      x.onload=()=>{document.title='Stánok v44';const pill=document.querySelector('.top .pill');if(pill)pill.textContent='v44';renderAll()};
+      x.src='v44_profit_inventory_summary.js?v=45';
+      x.onload=loadManualItemActual;
       document.body.appendChild(x);
     }
 
@@ -23,7 +32,7 @@
       if(document.getElementById('v43OpenPackageTargetsScript')){loadProfitInventory();return;}
       const x=document.createElement('script');
       x.id='v43OpenPackageTargetsScript';
-      x.src='v43_open_package_targets.js?v=44';
+      x.src='v43_open_package_targets.js?v=45';
       x.onload=loadProfitInventory;
       document.body.appendChild(x);
     }
@@ -32,7 +41,7 @@
       if(document.getElementById('v42CategoryProfitScript')){loadOpenPackageTargets();return;}
       const x=document.createElement('script');
       x.id='v42CategoryProfitScript';
-      x.src='v42_category_profit_only.js?v=44';
+      x.src='v42_category_profit_only.js?v=45';
       x.onload=loadOpenPackageTargets;
       document.body.appendChild(x);
     }
@@ -41,7 +50,7 @@
       if(document.getElementById('v40PrepaidScript')){loadCategoryProfit();return;}
       const x=document.createElement('script');
       x.id='v40PrepaidScript';
-      x.src='v40_prepaid_before_event.js?v=44';
+      x.src='v40_prepaid_before_event.js?v=45';
       x.onload=loadCategoryProfit;
       document.body.appendChild(x);
     }
@@ -50,7 +59,7 @@
       if(document.getElementById('v39AllItemsScript')){loadPrepaid();return;}
       const x=document.createElement('script');
       x.id='v39AllItemsScript';
-      x.src='v39_all_items_in_shopping.js?v=44';
+      x.src='v39_all_items_in_shopping.js?v=45';
       x.onload=loadPrepaid;
       document.body.appendChild(x);
     }
@@ -59,7 +68,7 @@
       if(document.getElementById('v38SelectiveProfitScript')){loadAllItems();return;}
       const p=document.createElement('script');
       p.id='v38SelectiveProfitScript';
-      p.src='v38_selective_product_profit.js?v=44';
+      p.src='v38_selective_product_profit.js?v=45';
       p.onload=loadAllItems;
       document.body.appendChild(p);
     }
@@ -68,7 +77,7 @@
       if(document.getElementById('v37TruthfulResultsScript')){loadSelectiveProfit();return;}
       const t=document.createElement('script');
       t.id='v37TruthfulResultsScript';
-      t.src='v37_truthful_results.js?v=44';
+      t.src='v37_truthful_results.js?v=45';
       t.onload=loadSelectiveProfit;
       document.body.appendChild(t);
     }
@@ -77,7 +86,7 @@
       if(document.getElementById('v36VatSummaryScript')){loadTruthful();return;}
       const v=document.createElement('script');
       v.id='v36VatSummaryScript';
-      v.src='v36_vat_summary.js?v=44';
+      v.src='v36_vat_summary.js?v=45';
       v.onload=loadTruthful;
       document.body.appendChild(v);
     }
@@ -86,7 +95,7 @@
       if(document.getElementById('v35PlannedCostsScript')){loadVat();return;}
       const p=document.createElement('script');
       p.id='v35PlannedCostsScript';
-      p.src='v35_planned_costs.js?v=44';
+      p.src='v35_planned_costs.js?v=45';
       p.onload=loadVat;
       document.body.appendChild(p);
     }
@@ -95,7 +104,7 @@
       if(document.getElementById('v34PurchaseStatusScript')){loadPlannedCosts();return;}
       const p=document.createElement('script');
       p.id='v34PurchaseStatusScript';
-      p.src='v34_purchase_status.js?v=44';
+      p.src='v34_purchase_status.js?v=45';
       p.onload=loadPlannedCosts;
       document.body.appendChild(p);
     }
@@ -103,14 +112,14 @@
     if(document.getElementById('v33ShopResultsScript')){loadPurchaseStatus();return true;}
     const s=document.createElement('script');
     s.id='v33ShopResultsScript';
-    s.src='v33_shopping_results.js?v=44';
+    s.src='v33_shopping_results.js?v=45';
     s.onload=loadPurchaseStatus;
     document.body.appendChild(s);
     return true;
   }
 
-  if(!loadV44()){
+  if(!loadV45()){
     let tries=0;
-    const timer=setInterval(()=>{tries++;if(loadV44()||tries>80)clearInterval(timer)},125);
+    const timer=setInterval(()=>{tries++;if(loadV45()||tries>80)clearInterval(timer)},125);
   }
 })();
